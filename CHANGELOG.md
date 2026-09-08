@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1 — 2026-09-08
+
+`init` hardening:
+
+- The scaffolded `CLAUDE.md`'s Stage comment now maps each stage to the skill that works it (`concept (armature-pitch) → … → build (armature-bringup, armature-test)`), so a fresh session routes without the plugin README.
+- A pre-existing non-Armature `CLAUDE.md` triggers a merge-or-replace question instead of being overwritten.
+- The scaffold commit stages only the files init created or changed, keeping unrelated untracked files out in pre-existing repos.
+- Standing rules annotate `docs/01-spec/budgets.md` as created by `armature-spec`; the CAD-package question mentions the bundled SolidWorks MCP server when the answer is SOLIDWORKS.
+
 ## 1.2.0 — 2026-08-30
 
 Absorbs and adapts material from [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT, see `NOTICE.md`) and brings every agent-facing doc to one writing standard.

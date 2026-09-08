@@ -10,14 +10,17 @@ The current folder is the project root.
 
 ## 1. Guard
 
-If `CLAUDE.md` here already carries a `**Stage:**` line, this is an Armature project: report its stage and stop.
+If `CLAUDE.md` here already carries a `**Stage:**` line, this is an Armature project: report its stage and stop. A `CLAUDE.md` without one is somebody else's file: ask through AskUserQuestion whether to merge the template into it or replace it, and carry that answer into step 3.
 
 ## 2. Setup interview
 
 Ask through the AskUserQuestion tool:
 
 1. Project name and a one-line description.
-2. CAD package: SOLIDWORKS / Fusion 360 / Onshape / undecided.
+2. CAD package: SOLIDWORKS / Fusion 360 / Onshape / undecided. On
+   SOLIDWORKS, mention the bundled SolidWorks MCP server (`mcp/solidworks/`;
+   Windows, a running SolidWorks session, and `uv` on PATH) that lets
+   armature-cad's checks run against the live model.
 3. Builder profile: solo or team; fabrication access (printer, machining, hand tools); experience level.
 
 Done when every placeholder in the template below has a value.
@@ -54,10 +57,12 @@ __pycache__/
 ```
 
 - `CLAUDE.md` from the template below, with the setup answers filled in.
+  If step 1 chose merge, append the template's sections to the existing
+  file, keeping its content above them.
 
-Then `git init` (if not already a repo) and commit everything as
-`Initialize Armature project scaffold`. Done when `git ls-files` lists every
-scaffolded directory.
+Then `git init` (if not already a repo), stage only the files this scaffold
+created or changed, and commit as `Initialize Armature project scaffold`.
+Done when `git ls-files` lists every scaffolded directory.
 
 ## 4. CLAUDE.md template
 
@@ -66,7 +71,10 @@ scaffolded directory.
 
 <one-line description>
 
-**Stage:** concept  <!-- concept → spec → plan → analysis → cad → build -->
+**Stage:** concept
+<!-- concept (armature-pitch) → spec (armature-spec) → plan (armature-plan)
+     → analysis (armature-derive) → cad (armature-cad)
+     → build (armature-bringup, armature-test) -->
 **Latest artifacts:** none yet
 
 ## Glossary
@@ -88,7 +96,7 @@ it appears.
   docs/datasheets/index.md (the armature-librarian agent maintains it).
 - Red-team review (armature-red-team agent) before CAD hours or purchases.
 - Any change to a mass, power draw, or cost updates
-  docs/01-spec/budgets.md in the same session.
+  docs/01-spec/budgets.md (created by armature-spec) in the same session.
 - Every design decision gets a line in docs/decisions.md. When all three
   hold — hard to reverse, surprising without context, a real trade-off —
   it also gets a short ADR in docs/adr/ (`NNNN-slug.md`, a paragraph;
