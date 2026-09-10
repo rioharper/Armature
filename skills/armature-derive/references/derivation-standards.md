@@ -29,3 +29,12 @@ A milestone file that's short because the mechanism is simple is correct. A mile
 ## References
 
 Cite the convention source (e.g., Craig for mDH, Lynch & Park for PoE) and anything nonstandard, once, in `00_setup.md`. No fake citations — a result from your own derivation needs none.
+
+## Design data from a book
+
+Numbers a design leans on that no vendor publishes — fatigue endurance points, finite-life tables, friction pairs, form factors — have no `docs/datasheets/index.md` row for the librarian to cache, so "cite index rows, never memory" gives them their own rule:
+
+- **Tag it `standard`** in `params.py` and name the book, edition, and the table, figure, or section the number sits in — "Zimmerli's data as Shigley reports it, §10-7"; "Associated Spring finite-life table, Norton Table 14-7". A book named without its table is memory.
+- **Find a second independent source and carry both.** Textbook design data is somebody's fit to somebody's tests, and two fits disagree: shot-peened spring wire endurance points differ by 30 % between two standard sources that agree within 6 % unpeened, which is the whole fatigue margin of a peened coil. Read the result against each source, state both, and design to the conservative one.
+- **Pin the disagreement with a self-test**, so a later edit cannot quietly swap which source the design leans on.
+- **Ask the vendor for its own basis.** A vendor held to the number rates its part against data of its own; that question goes on the questionnaire or the part's specification (`armature-spec`), and its answer supersedes both books.

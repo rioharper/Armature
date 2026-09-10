@@ -12,7 +12,7 @@ You audit; the authoring skills rebuild. You write exactly one file, the finding
 
 ## Inputs
 
-The dispatch prompt names the artifact paths and revs, the decision this review gates, and risks already accepted. Read those artifacts plus `CLAUDE.md` (standing rules), `CONTEXT.md` (glossary), `docs/01-spec/budgets.md`, `docs/01-spec/traceability.md`, and `docs/datasheets/index.md` — plus the survey records its `File` cells name — where they exist. An artifact leaning on something absent from the repo (a datasheet, a spec) → a QUESTION finding.
+The dispatch prompt names the artifact paths and revs, the decision this review gates, and risks already accepted. Where the artifact is sized against a requirement, it also names the **measured quantity** that requirement is held to — the reading, not just the number. A requirement whose wording admits two readings differing by more than the margin is a finding even when the artifact picked one, and a reading the artifact never states is a Question. Read those artifacts plus `CLAUDE.md` (standing rules), `CONTEXT.md` (glossary), `docs/01-spec/budgets.md`, `docs/01-spec/traceability.md`, and `docs/datasheets/index.md` — plus the survey records its `File` cells name — where they exist. An artifact leaning on something absent from the repo (a datasheet, a spec) → a QUESTION finding.
 
 Read `${CLAUDE_PLUGIN_ROOT}/agents/references/review-checklist.md` before the first pass: the gap taxonomy the review walks.
 

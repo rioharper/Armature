@@ -49,10 +49,11 @@ Before deriving anything, pin down — conventions come from `CONTEXT.md` (or `d
 - Convention: modified DH, standard DH, or product of exponentials — state which and why
 - Frame definitions and a labeled parameter table: link lengths, masses, COM positions, inertias, gravity vector — with symbols, units, and current best numeric values (mark unknowns)
 - What's actually being asked: FK only? Jacobian for force analysis? Full dynamics for actuator sizing or control?
+- **The reading of every requirement you size against.** A requirement bounds a *measured quantity*, and the quantity is rarely the one its wording names: a deceleration and the accelerometer reading of it differ by one g, a torque at the joint and at the motor by the reduction, a mass dry and as flown by the battery. Quote the requirement's number against the instrument or definition that reads it, and write that reading into `00_setup.md` before deriving anything. Where the wording admits two readings that differ by more than the margin, decide, give the one sentence that decides it, and route the wording back to `armature-spec` — an ambiguity left implicit here survives spec, plan, and every milestone under it, and surfaces as a lost margin.
 
 If the project has no numbers yet, derive symbolically and leave the parameter block full of clearly-marked placeholders. If the design itself is still open — more undecided architecture than one session can settle — call the Skill tool with "armature-wayfind" to chart the way first.
 
-**When a number has to come from a datasheet, get the datasheet.** Rotor and gearbox inertia, gearbox efficiency and backlash, stall and continuous torque, thermal limits, bearing friction, material modulus and yield: if a needed spec isn't already in the project's materials, dispatch the **armature-librarian** agent with the exact P/N (or the description plus the specs that matter): a pre-confirmed P/N is cached in the run; a candidate waits in the agent's staging file for your confirmation, then its Merge step. Cite index rows, never memory; until a number is confirmed, carry it as a clearly-marked TBD. A milestone needing several parts sends them in waves of two or three per the plugin's `references/subagent-dispatch.md` (two levels above this skill).
+**When a number has to come from a datasheet, get the datasheet.** Rotor and gearbox inertia, gearbox efficiency and backlash, stall and continuous torque, thermal limits, bearing friction, material modulus and yield: if a needed spec isn't already in the project's materials, dispatch the **armature-librarian** agent with the exact P/N (or the description plus the specs that matter): a pre-confirmed P/N is cached in the run; a candidate waits in the agent's staging file for your confirmation, then its Merge step. Cite index rows, never memory; until a number is confirmed, carry it as a clearly-marked TBD. Design data that lives in a book rather than on a vendor sheet — fatigue endurance points, finite-life tables, friction pairs — has no row to cite and its own rule in `references/derivation-standards.md`. A milestone needing several parts sends them in waves of two or three per the plugin's `references/subagent-dispatch.md` (two levels above this skill).
 
 Write the model into `00_setup.md` (system description, numbered assumptions, conventions, parameter table) and the parameter block into `params.py`, on the `armature/m0-setup` branch.
 
@@ -94,6 +95,20 @@ Flagging is half the job. When the user approves a change — bigger motor, shor
 3. Bump the revision note in every `.md` file that changed, recording what changed and why.
 
 When masses, inertias, or torque results firm up, update the matching rows in `docs/01-spec/budgets.md` (Source column: model).
+
+## When a plan task lands as a report
+
+The four milestone notes derive; a plan task run by this skill usually *decides*
+instead — re-running the model to settle a requirement dispute, size a part, or
+close the findings routed to it. Its output is a report under `docs/testing/`,
+shaped by `derivation-report-template.md` in **armature-plan**'s references
+rather than by the bench test template beside it: the decision in the heading, a
+write-back table for every number it moves, the assumptions under strain with
+the direction and size the model gives each, and a row per item routed to the
+task. Print every table from a module under `analysis/model/` so the report
+re-runs; a number typed in by hand goes stale in silence. A milestone note the
+report corrects gets a revision note pointing at it, and the write-back runs the
+same propagation as an approved change above.
 
 ## Boundaries
 

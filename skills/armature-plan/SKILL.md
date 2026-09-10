@@ -101,7 +101,7 @@ Wall-clock tracks how much of the leaf is checked against something the executor
 
 **Re-cut at each phase gate.** The plan carries an `## Estimate versus actual` section, one row per closed leaf (Est, Actual, ratio). At the gate, the next phase is re-cut from the ratios of closed leaves *of the same kind*; a kind with no actual yet carries forward unchanged, and the gate note says so.
 
-A test task — prototype (phase 3) or verification (phase 6) — names its procedure/report file under `docs/testing/` per `references/test-report-template.md`; that file, filled in, is what its `Done when` points to.
+A task whose output is a report names that file under `docs/testing/`, and the filled-in file is what its `Done when` points to. Which shape it takes follows from what the task produces: a **test task** — prototype (phase 3) or verification (phase 6) — measures, and takes `references/test-report-template.md`; an **analysis task** run by `armature-derive` decides on numbers the model prints, and takes `references/derivation-report-template.md`.
 
 **Word tasks to survive the wait.** A task may sit for weeks while the project moves under it, so write the behavioral contract, not the route: state what the result must do, name parts, interfaces, and symbols rather than file paths or line numbers, make `Done when` verifiable by a session that never saw this conversation, and where a task borders a neighbor, state what's out of its scope.
 
