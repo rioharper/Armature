@@ -23,7 +23,7 @@ The families where robotics designs fail review, in working order: the early one
 - **Assumptions vs. envelope**: for every assumption the derivation names (rigid links, neglected friction, lumped rotor inertia), does the real operating range cross the line where it breaks?
 - **Singularities & workspace**: does any singularity sit *inside* the region the robot must work in?
 - **Units and signs**: check them explicitly.
-- **Datasheet reality**: are the numbers driving the design confirmed from datasheets (`docs/datasheets/index.md` rows), or assumed? An assumed number inside a load-bearing calculation is a Question at best and a Blocker at worst.
+- **Datasheet reality**: are the numbers driving the design confirmed from datasheets (`docs/datasheets/index.md` rows), or assumed? An assumed number inside a load-bearing calculation is a Question at best and a Blocker at worst. A row's **Clauses read** cell bounds what was verified — probe what it leaves open, and take as answered what it covers. A row marked **CANDIDATE, pending user confirmation** is unconfirmed: a design resting on one is a Blocker.
 
 ## 4. Interfaces
 

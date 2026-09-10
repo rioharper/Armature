@@ -41,8 +41,12 @@ Seed these files:
 - `docs/decisions.md`: header `# Decision log`, one column-format line
   `<!-- date · decision · why · supersedes -->`, and its first entry — the
   project init itself.
-- `docs/datasheets/index.md`: header + empty table
-  `| P/N | Manufacturer | Key numbers | Source URL | Retrieved | File |`.
+- `docs/datasheets/index.md`: header, the legend comment
+  `<!-- Clauses read: the sections, tables, or pages actually verified. File: the
+  cached PDF, HTML snapshot, or image + transcript; a source with no saveable
+  document points at its survey record, docs/datasheets/<task>-<subject>-<slice>.md. -->`,
+  and the empty table
+  `| P/N | Manufacturer | Key numbers | Clauses read | Source URL | Retrieved | File |`.
 - `cad/ots-parts/index.md`: header + empty table
   `| File | P/N | Datasheet row | Source URL | Retrieved |`.
 - `.gitkeep` in every scaffolded directory the seeds above leave empty (git
@@ -93,7 +97,9 @@ it appears.
 ## Standing rules
 
 - Every datasheet number cited anywhere traces to a row in
-  docs/datasheets/index.md (the armature-librarian agent maintains it).
+  docs/datasheets/index.md (the armature-librarian agent maintains it). A row
+  marked CANDIDATE is unconfirmed and carries no decision until the user
+  confirms it.
 - Red-team review (armature-red-team agent) before CAD hours or purchases.
 - Any change to a mass, power draw, or cost updates
   docs/01-spec/budgets.md (created by armature-spec) in the same session.
