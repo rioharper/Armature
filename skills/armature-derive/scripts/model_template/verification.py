@@ -14,6 +14,10 @@ from params import N
 from kinematics import fk_num
 from dynamics import static_torques
 
+# Run order and heading for `run_all.py`, which discovers this
+# module by the `test_*` callables below, not by name.
+MILESTONE = (3, "Milestone 3: verification")
+
 
 def inverse_kinematics(target_xyz, q0=None, tol=1e-12):
     """Numeric position IK via SciPy least-squares.
@@ -77,9 +81,11 @@ def test_ik_roundtrip(trials=5, tol=1e-4):
 
 
 if __name__ == "__main__":
-    print("Running Milestone 3 self-tests ...")
-    test_ik_roundtrip()
-    print("Milestone 3 self-tests passed.\n")
+    import sys
+    import run_all
+
+    # Every test_* in this file, discovered — no list to fall behind.
+    run_all.run_module(sys.modules[__name__])
 
     q_demo = np.zeros(N)   # fully outstretched: worst gravity case for a 2R arm
     print("Example numbers (outstretched posture, params.PARAMS):")

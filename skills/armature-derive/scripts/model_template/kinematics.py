@@ -17,6 +17,10 @@ from sympy import cos, sin, Matrix
 
 from params import DH, T_TOOL, N, q, QS, SUB_Q, SUB_P
 
+# Run order and heading for `run_all.py`, which discovers this
+# module by the `test_*` callables below, not by name.
+MILESTONE = (1, "Milestone 1: kinematics")
+
 
 def dh_transform(alpha, a, d, theta):
     """Modified DH single-link transform (Craig, eq. 3.6)."""
@@ -86,8 +90,10 @@ def test_jacobian_vs_finite_difference(trials=5, h=1e-7, tol=1e-5):
 
 
 if __name__ == "__main__":
-    print("Running Milestone 1 self-tests ...")
-    test_jacobian_vs_finite_difference()
-    print("Milestone 1 self-tests passed.\n")
+    import sys
+    import run_all
+
+    # Every test_* in this file, discovered — no list to fall behind.
+    run_all.run_module(sys.modules[__name__])
     print("  T_0_ee =", T_EE)
     print("  J =", J)

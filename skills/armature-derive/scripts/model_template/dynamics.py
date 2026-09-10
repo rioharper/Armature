@@ -14,6 +14,10 @@ from params import (COM_LOCAL, INERTIA, MASSES, GRAVITY_VEC, N, t,
                      q, qd, qdd, QS, QDS, SUB_Q, SUB_P)
 from kinematics import FRAMES
 
+# Run order and heading for `run_all.py`, which discovers this
+# module by the `test_*` callables below, not by name.
+MILESTONE = (2, "Milestone 2: dynamics")
+
 
 def lagrangian_dynamics(frames):
     """Euler-Lagrange. Returns (M, C, gvec, V) with tau = M qdd + C qd + g.
@@ -139,10 +143,10 @@ def test_energy_conservation(T_end=2.0, tol_rel=1e-4):
 
 
 if __name__ == "__main__":
-    print("Running Milestone 2 self-tests ...")
-    test_mass_matrix_properties()
-    test_skew_symmetry()
-    test_energy_conservation()
-    print("Milestone 2 self-tests passed.\n")
+    import sys
+    import run_all
+
+    # Every test_* in this file, discovered — no list to fall behind.
+    run_all.run_module(sys.modules[__name__])
     print("  M(q) =", M_SYM)
     print("  g(q) =", G_SYM)

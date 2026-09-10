@@ -13,7 +13,7 @@ The derivation is four self-contained parts, each with its own `.md` note, its o
 
 Milestones 1–3 close through the same **checkpoint**:
 
-1. Run the self-tests via Bash: `python analysis/model/run_all.py` — all must pass.
+1. Run the self-tests via Bash — `python analysis/model/run_all.py` and `pytest`, which reach the same discovered checks. All must pass.
 2. Dispatch the **armature-red-team** agent with the milestone's `.md` and `.py` files, earlier milestones as context.
 3. Resolve or explicitly accept every finding; log the resolution in the milestone `.md`'s revision note.
 4. Merge the branch. The merge is the phase gate — the next milestone starts only after it.
@@ -33,10 +33,13 @@ analysis/model/
   kinematics.py        <- Milestone 1 (FK, Jacobian, self-tests)
   dynamics.py          <- Milestone 2 (Euler-Lagrange, self-tests)
   verification.py      <- Milestone 3 (IK, worst-case search, self-tests)
-  run_all.py           <- imports the above, runs every self-test in order
+  run_all.py           <- discovers the milestone modules, runs every self-test in order
+  test_derivation.py   <- the same checks, exposed to pytest
 ```
 
 At Milestone 0, copy `model_template/` from this skill's `scripts/` directory into `analysis/model/`. Each `.py` module mirrors the equations and variable names of its matching `.md` exactly, and imports only what it needs from earlier modules (`dynamics.py` imports `kinematics.py`'s frames; it never needs `verification.py`).
+
+A module joins the run by shape, not by name: define its self-tests as `test_*` callables and give it a module-level `MILESTONE = (order, title)`. Both commands discover it, so a module added later — a `spring.py` for a plan task — and a test added to a module that already exists are collected with no edit to `run_all.py` or `test_derivation.py`.
 
 ## Step 0: Establish the model
 
@@ -78,7 +81,7 @@ The derivation exists to change decisions. In `03_results.md`, actively hunt for
 
 For each finding: state the problem physically, name the specific spec or part it collides with, and lay out the levers (relax the requirement, resize the component, change the architecture). Routing the fix is a boundary decision — see Boundaries.
 
-In `verification.py`: numeric inverse kinematics (`least_squares`) with an FK→IK→FK round-trip self-test, and a worst-case-static-torque workspace search to size actuators against. `run_all.py` imports `params`, `kinematics`, `dynamics`, and `verification` and runs every self-test in sequence — the single command that proves the whole model is internally consistent.
+In `verification.py`: numeric inverse kinematics (`least_squares`) with an FK→IK→FK round-trip self-test, and a worst-case-static-torque workspace search to size actuators against. `run_all.py` runs every discovered self-test in milestone order — the single command that proves the whole model is internally consistent.
 
 The Milestone 3 checkpoint dispatches the complete picture — all four `.md` files and all four `.py` modules — because this pass checks cross-document consistency (does `03_results.md` follow from what M1/M2 derived?), not just M3 alone.
 
@@ -109,7 +112,7 @@ Datasheet numbers are the model's opening bid; measured numbers are the truth. W
 ## Deliverables
 
 1. `analysis/derivation/00_setup.md` … `03_results.md` — four files per `references/derivation-standards.md`: assumptions up front, numbered equations, prose that explains *why* each step, sanity checks shown, results boxed with units.
-2. `analysis/model/params.py`, `kinematics.py`, `dynamics.py`, `verification.py`, `run_all.py` — the adapted, passing, parameterized modules, `run_all.py` confirmed clean.
+2. `analysis/model/params.py`, `kinematics.py`, `dynamics.py`, `verification.py`, `run_all.py`, `test_derivation.py` — the adapted, passing, parameterized modules, confirmed green under both `run_all.py` and `pytest`.
 3. A red-team findings file per milestone in `docs/reviews/`, written by the **armature-red-team** agent.
 
 ## Scope notes
