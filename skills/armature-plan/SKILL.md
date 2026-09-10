@@ -29,7 +29,7 @@ Each named term gets a tight definition (one or two sentences, what it IS) follo
 
 Content requirements, regardless of destination:
 
-- **Coordinate frames:** define every frame the project will use ({W} world, {B} base, {E} end-effector, per-joint frames…), their origins, axis conventions (right-handed, z-up or z-along-joint — pick and state), and the convention family (e.g., modified DH, or product-of-exponentials). Once chosen, these are law.
+- **Coordinate frames:** define every frame the project will use ({W} world, {B} base, {E} end-effector, per-joint frames…), their origins, axis conventions (right-handed, z-up or z-along-joint — pick and state), and the convention family. Once chosen, these are law. Pick the family from the topology: a serial chain on a fixed base takes modified DH or product-of-exponentials; a platform whose own body moves — wheeled, legged, or flying — takes a **floating base plus joints**, the body's pose in {W} as a 6-DOF transform followed by each joint's axis and origin in its parent frame. State the one the machine has — a floating base is a convention in its own right, not a chain missing its DH table.
 - **Symbol table:** q for joint positions, τ for torques, m_i, l_i, I_i for link properties, etc., with units. The **armature-derive** skill consumes this table verbatim, so make it complete.
 - **Naming conventions:** part numbering scheme (e.g., `ARM-LNK-002`), CAD file naming, revision scheme, units policy (SI internally, always).
 - **Definitions of done** for a task (its `Done when` literally true, checkable by a session that never saw the conversation, and every artifact it touched committed), a phase (every task done or killed with its kill criterion logged, the exit criterion held, budgets and traceability debited, the next phase re-cut per §3), and the project.
@@ -63,7 +63,20 @@ Every task gets:
         Done when: 500 cycles logged in docs/testing/T3.2-wrist-cycles.md, elongation < 1%
 ```
 
-`Executor` is `armature-derive`, `armature-cad`, `armature-inventor` (agent), or `user` — name it so a fresh session knows which skill or agent picks the task up, or that it's hands-on-hardware work no skill performs. Dependencies explicit, exit criteria observable.
+`Executor` names who picks the task up, so a fresh session knows where it goes:
+
+| Executor | Picks up |
+|---|---|
+| `armature-derive` | kinematics, dynamics, sizing math |
+| `armature-cad` | part definitions and build recipes |
+| `armature-test` | robot software, test-first |
+| `armature-bringup` | bench procedures and the measurements they record |
+| `armature-librarian` | datasheets and OTS models (agent) |
+| `armature-red-team` | adversarial review (agent) |
+| `armature-inventor` | frontier research (agent) |
+| `user` | hands-on work no skill performs: shop, bench, vendor contact, judgement calls |
+
+A leaf the skill drafts and the user executes names both, written `armature-bringup + user`. Dependencies explicit, exit criteria observable.
 
 **The unit is the session.** A leaf task is one agent session, roughly 100k tokens: finished, committed, and re-runnable from the repo alone. Where the session boundary and the hour estimate disagree, the session boundary wins. A parent task groups its leaves and keeps the number that later phases and the risk table cite; leaves are lettered (`T1.1a`), and a dependency on a parent means its last leaf. Three cuts a planner makes before a session discovers them:
 

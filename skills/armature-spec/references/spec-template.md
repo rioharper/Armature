@@ -45,6 +45,20 @@ Why the winner won AND why each loser lost.
 Skip only if the mechanism has no meaningful DOF (a static fixture, say) —
 say so explicitly rather than omitting the section silently.
 
+**Platform mapping.** The fields below read directly for a mechanism on a
+fixed base; a machine that moves its own body answers the translated
+reading, and says which one it used. *Topology* (6.1) opens with the
+body's 6 DOF as its first row, `Type` reading `F` for a free body, then
+the joints that body carries.
+*Workspace* (6.2) becomes the flight or stride envelope: apex height and
+ground range for a hopper or a drone, stride length and step height for a
+legged platform, turning radius and footprint for a wheeled base.
+*Motion profile* (6.4) becomes the event that sizes the loads — touchdown
+speed and landing attitude for anything that leaves the ground, top speed
+and braking deceleration for a wheeled base — in place of a cycle time.
+*Mounting* (6.5) becomes the attitude envelope: which way gravity points
+across the poses the body actually holds, and the worst of them.
+
 ### 6.1 Topology
 | Joint | Type (R/P) | Approx. axis / location | Range of motion |
 |-------|-----------|--------------------------|------------------|
@@ -70,8 +84,9 @@ than leaving the field blank.
 How the base is mounted and which way gravity points relative to the
 mechanism (horizontal reach, vertical stack, tilted, mobile-on-a-slope).
 
-This section does not itself choose a kinematic convention (mDH/sDH/
-PoE) or name coordinate frames; that's **armature-plan**'s job.
+This section does not itself choose a kinematic convention (mDH/sDH/PoE,
+or a floating base plus joints) or name coordinate frames; that's
+**armature-plan**'s job.
 
 ## 7. System Architecture
 Subsystem breakdown, interfaces between subsystems (mechanical, electrical,

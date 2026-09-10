@@ -2,6 +2,8 @@
 
 Adapted and generalized from FIRST Robotics Competition "Design 101" (The Compass Alliance, 2019) for general robotics projects.
 
+**Reading this for a platform that moves its own body.** The examples below come from wheeled robots carrying arms; every doctrine holds for mobile, legged, and aerial machines with its terms swapped. The *mechanism* whose tasks you group is a leg, a rotor group, or a drivetrain rather than a gripper. The *envelope* to draw to scale is the flight or stride envelope — apex and ground range, stride length and step height, turning radius and footprint — in place of a reach radius. Mass climbs the trade-off matrix the further the body leaves the ground: for anything that flies, it is the driver the weights should say is heaviest. *Fail informatively* still holds, and the cheap failure moves to a test stand, a tether, or one leg on a rig, since a free-flying prototype fails expensively. And the load case that sizes structure comes from an event — touchdown, landing attitude, a rotor out — where an arm's comes from a held pose.
+
 ## Level 0: The initial plan
 
 **Time is almost always the binding constraint.** With infinite time you'd build every candidate design and test them all. You can't, so the earliest decisions — what to build, what *not* to build — carry the most leverage. Front-load the thinking.
