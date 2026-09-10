@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `armature-librarian`: gains Bash. Every run opens a staging file (`docs/datasheets/staging/<task>-<subject>.md`) before its first fetch and ledgers each row and cached file as found, so a stalled or rate-limited run leaves partial results; the file is the run's only report. A pre-confirmed P/N is cached in the run — the PDF fetched by `curl`, the index row shell-appended, never read-modify-written — while a candidate waits in staging for the user's confirmation and the agent's Merge step, which deletes the file once every row is merged. Dispatch paragraphs in spec, derive, and cad point at the contract. `CONTEXT.md` gains **Staging file**.
 - `armature-plan`: the task unit is the session (roughly 100k tokens, one commit); parent tasks group lettered leaves; a review and its rework, a report, and a change of executor are cuts. Tasks are cut at every third-party wait so the agent-doable half has its own `Done when`. Estimates are sessions plus wall-clock, from an executor-aware starting table, with `Actual:` on closed leaves and a same-kind re-cut at each phase gate. `CONTEXT.md` gains **Session** and **Leaf**.
 
 ## 1.2.1 — 2026-09-08

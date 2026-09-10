@@ -10,4 +10,5 @@ Glossary for the Armature plugin itself (not for user projects — their glossar
 - **Effort**: a unit of work too big for one agent session, coordinated across sessions by a wayfinder map. An effort overlays the pipeline; it is not a stage and never moves the `Stage:` line.
 - **Map**: the canonical artifact of an effort — destination, notes, decisions index, and fog — with decision tickets as children. Lives on the project's issue tracker.
 - **Overlay**: the relationship between wayfinding and the pipeline: stages stay intact and become the means of resolving a map's tickets, rather than being absorbed or wrapped.
+- **Staging file**: one librarian run's ledger — the rows and cached files it found, written as each is found — waiting to be merged into a shared index. A staging file left behind is an unmerged run. _Avoid_: report, scratch file, index-staging.
 - **Executor**: who resolves a ticket or task — a stage skill, an agent (inventor / librarian / red-team), or the user. Ticket *types* (research / prototype / grilling / task) say what kind of question it is; the executor says who works it. Agents are executors, never ticket types.

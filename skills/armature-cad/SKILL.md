@@ -24,7 +24,7 @@ Then confirm two things the files rarely pin: **which CAD package**, and the **f
 **Gate.** Release grade requires two sourced numbers:
 
 - *Loads*, from the derivation. Not derived yet → call the Skill tool with "armature-derive" for them.
-- *Interfaces*, from the datasheet. A mating interface on a COTS datasheet not in the BOM (an actuator's output-flange bolt circle, a bearing's bore and width) → dispatch the **armature-librarian** agent with the exact P/N (or the description plus the specs that matter) for the datasheet and, if the geometry itself is needed, the OTS CAD model; confirm what it reports before either is trusted.
+- *Interfaces*, from the datasheet. A mating interface on a COTS datasheet not in the BOM (an actuator's output-flange bolt circle, a bearing's bore and width) → dispatch the **armature-librarian** agent with the exact P/N (or the description plus the specs that matter) for the datasheet and, if the geometry itself is needed, the OTS CAD model; a candidate waits in the agent's staging file until you confirm it and run its Merge step.
 
 At sketch grade, mark the missing number (`load: TBD, est. ~600 N`; `BCD: TBD — verify on receipt`) and continue. Every TBD resolves before the release-grade pass, and none survives into a drawing or export.
 
