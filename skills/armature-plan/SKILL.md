@@ -32,11 +32,11 @@ Content requirements, regardless of destination:
 - **Coordinate frames:** define every frame the project will use ({W} world, {B} base, {E} end-effector, per-joint frames…), their origins, axis conventions (right-handed, z-up or z-along-joint — pick and state), and the convention family (e.g., modified DH, or product-of-exponentials). Once chosen, these are law.
 - **Symbol table:** q for joint positions, τ for torques, m_i, l_i, I_i for link properties, etc., with units. The **armature-derive** skill consumes this table verbatim, so make it complete.
 - **Naming conventions:** part numbering scheme (e.g., `ARM-LNK-002`), CAD file naming, revision scheme, units policy (SI internally, always).
-- **Definitions of done** for a task, a phase, and the project.
+- **Definitions of done** for a task (its `Done when` literally true, checkable by a session that never saw the conversation, and every artifact it touched committed), a phase (every task done or killed with its kill criterion logged, the exit criterion held, budgets and traceability debited, the next phase re-cut per §3), and the project.
 
 ### 2. Phase breakdown
 
-Decompose into phases where each phase ends in something *demonstrable or testable*. Typical arc (adapt, don't copy):
+Decompose into phases where each phase ends in something *demonstrable or testable*. A phase header carries its hours, session count, and closed count (`## Phase 1 — Analysis and sizing (68 h, 24 sessions, 11 closed)`). Typical arc (adapt, don't copy):
 
 1. **Analysis & sizing** — kinematic model, workspace check, actuator sizing from dynamics, DOF/reachability verification. Derivation tasks say "derive FK/IK/Jacobian/dynamics" and carry `armature-derive` as Executor.
 2. **Concept CAD & layout** — master sketch / skeleton model driving all subassemblies, envelope check, interference and service-access check, mass rollup vs. budget.
@@ -52,14 +52,41 @@ Every task gets:
 
 ```
 - [ ] T3.2 Prototype cable-driven wrist
-      Executor: user
+      Executor: armature-cad + user · Depends on: T3.1 · Est: 1h45 · 2 sessions
       Answers: can 2mm Dyneema hold tension over 500 cycles at r=8mm?
-      Depends on: T3.1 · Est: 6h · Needs: printed pulley set, load cell
-      Done when: 500-cycle test logged, elongation < 1%, OR killed and
-      T3.2b (geared wrist) activated
+      Done when: T3.2b closes, OR killed and T3.3 (geared wrist) activated
+  - [x] T3.2a Pulley set and load-cell fixture
+        Executor: armature-cad · Est: 45 min · Actual: 30 min · Closed 2026-09-09
+        Done when: part definitions committed, print files exported
+  - [ ] T3.2b 500-cycle tension test
+        Executor: user · Depends on: T3.2a · Est: 1h · Needs: printed pulley set, load cell
+        Done when: 500 cycles logged in docs/testing/T3.2-wrist-cycles.md, elongation < 1%
 ```
 
-`Executor` is `armature-derive`, `armature-cad`, `armature-inventor` (agent), or `user` — name it so a fresh session knows which skill or agent picks the task up, or that it's hands-on-hardware work no skill performs. Estimates in hours, dependencies explicit, exit criteria observable. Keep tasks under ~a day of work; split anything bigger.
+`Executor` is `armature-derive`, `armature-cad`, `armature-inventor` (agent), or `user` — name it so a fresh session knows which skill or agent picks the task up, or that it's hands-on-hardware work no skill performs. Dependencies explicit, exit criteria observable.
+
+**The unit is the session.** A leaf task is one agent session, roughly 100k tokens: finished, committed, and re-runnable from the repo alone. Where the session boundary and the hour estimate disagree, the session boundary wins. A parent task groups its leaves and keeps the number that later phases and the risk table cite; leaves are lettered (`T1.1a`), and a dependency on a parent means its last leaf. Three cuts a planner makes before a session discovers them:
+
+- a review and its rework are separate leaves (the **armature-red-team** agent runs in its own context; resolving its findings costs a session);
+- a report (re-run the model, tabulate the sweep, write back to the spec, `params.py`, `budgets.md`) is its own leaf;
+- a change of executor is a cut.
+
+User-executed leaves keep the older bound: under a day of hands-on work.
+
+**Cut at every third-party wait.** Wherever a task waits on a party outside the project — a vendor's quote, a shipment, someone else's CI run, a reviewer's answer — cut it there. The agent-doable leaf's `Done when` ends at "ready to send" or "submitted"; the waiting leaf is `Executor: user` with `Done when: the reply is recorded as received, whatever it says`, so the only session that can close it is one holding the reply.
+
+**Estimate in sessions and wall-clock.** A leaf's `Est:` is the wall-clock of its session; a parent's is the sum plus its session count. A closed leaf adds `Actual:` beside `Est:`. User leaves are estimated in the user's own hours, which they state. The user's hours per week bound the sessions they drive, so the calendar follows from wall-clock. Starting table, until the project's own actuals replace it:
+
+| Leaf kind | Wall-clock per session |
+|---|---|
+| Writing: documents, repository layout, configuration, a schema | 15–45 min |
+| Checked outside the editor: a build, a real source tree at a tag, constants that must agree across documents | 1–2 h |
+| Derivation milestone, three leaves | draft ~30 min · review ~0 for the driver · rework ~1 h |
+| Report: re-run, tabulate, write back | 1–1.5 h |
+
+Wall-clock tracks how much of the leaf is checked against something the executor does not control: a fast draft is fast because it defers the checking, and the checking is where the hours are.
+
+**Re-cut at each phase gate.** The plan carries an `## Estimate versus actual` section, one row per closed leaf (Est, Actual, ratio). At the gate, the next phase is re-cut from the ratios of closed leaves *of the same kind*; a kind with no actual yet carries forward unchanged, and the gate note says so.
 
 A test task — prototype (phase 3) or verification (phase 6) — names its procedure/report file under `docs/testing/` per `references/test-report-template.md`; that file, filled in, is what its `Done when` points to.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `armature-plan`: the task unit is the session (roughly 100k tokens, one commit); parent tasks group lettered leaves; a review and its rework, a report, and a change of executor are cuts. Tasks are cut at every third-party wait so the agent-doable half has its own `Done when`. Estimates are sessions plus wall-clock, from an executor-aware starting table, with `Actual:` on closed leaves and a same-kind re-cut at each phase gate. `CONTEXT.md` gains **Session** and **Leaf**.
+
 ## 1.2.1 — 2026-09-08
 
 `init` hardening:
