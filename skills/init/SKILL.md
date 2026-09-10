@@ -42,11 +42,13 @@ Seed these files:
   `<!-- date · decision · why · supersedes -->`, and its first entry — the
   project init itself.
 - `docs/datasheets/index.md`: header, the legend comment
-  `<!-- Clauses read: the sections, tables, or pages actually verified. File: the
-  cached PDF, HTML snapshot, or image + transcript; a source with no saveable
-  document points at its survey record, docs/datasheets/<task>-<subject>-<slice>.md. -->`,
+  `<!-- Clauses read: the sections, tables, or pages actually verified. Price: list
+  price at its quantity break, or "quote only" where the vendor publishes none;
+  dated by Retrieved. File: the cached PDF, HTML snapshot, or image + transcript; a
+  source with no saveable document points at its survey record,
+  docs/datasheets/<task>-<subject>-<slice>.md. -->`,
   and the empty table
-  `| P/N | Manufacturer | Key numbers | Clauses read | Source URL | Retrieved | File |`.
+  `| P/N | Manufacturer | Key numbers | Clauses read | Price | Source URL | Retrieved | File |`.
 - `cad/ots-parts/index.md`: header + empty table
   `| File | P/N | Datasheet row | Source URL | Retrieved |`.
 - `.gitkeep` in every scaffolded directory the seeds above leave empty (git
@@ -102,7 +104,9 @@ it appears.
   confirms it.
 - Red-team review (armature-red-team agent) before CAD hours or purchases.
 - Any change to a mass, power draw, or cost updates
-  docs/01-spec/budgets.md (created by armature-spec) in the same session.
+  docs/01-spec/budgets.md (created by armature-spec) in the same session. A cost
+  estimate cites the index row whose Price it reads; a part priced `quote only`
+  stays a guess until a human asks a vendor.
 - Every design decision gets a line in docs/decisions.md. When all three
   hold — hard to reverse, surprising without context, a real trade-off —
   it also gets a short ADR in docs/adr/ (`NNNN-slug.md`, a paragraph;

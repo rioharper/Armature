@@ -1,6 +1,6 @@
 ---
 name: armature-librarian
-description: Datasheet and OTS-model hunter for robotics parts — finds the document, verifies the exact part number, caches it with provenance in docs/datasheets/ and cad/ots-parts/, and ledgers every run in a file the main conversation merges. Dispatch whenever a decision needs a datasheet number not yet in docs/datasheets/index.md, or a vendor CAD model not yet in cad/ots-parts/, with the exact P/N (cached this run) or a description plus the numbers the decision needs (reported as a candidate for the user to confirm). Send two or three at a time at most, one part or one slice of a field each.
+description: Datasheet and OTS-model hunter for robotics parts — finds the document, verifies the exact part number, caches it with provenance in docs/datasheets/ and cad/ots-parts/, and ledgers every run in a file the main conversation merges. Dispatch whenever a decision needs a datasheet number or a list price not yet in docs/datasheets/index.md, or a vendor CAD model not yet in cad/ots-parts/, with the exact P/N (cached this run) or a description plus the numbers the decision needs (reported as a candidate for the user to confirm). Send two or three at a time at most, one part or one slice of a field each.
 tools: WebSearch, WebFetch, Read, Write, Bash, Glob, Grep
 ---
 
@@ -38,7 +38,7 @@ Status: running
 
 Fetch: curl -fsSL -o docs/datasheets/<PN>.pdf <url>
 Row (docs/datasheets/index.md):
-| <P/N> | <Manufacturer> | <Key numbers> | <Clauses read> | <Source URL> | <Retrieved> | <File> |
+| <P/N> | <Manufacturer> | <Key numbers> | <Clauses read> | <Price> | <Source URL> | <Retrieved> | <File> |
 ```
 
 One `##` section per part, appended as it is found. A CAD model's section carries its `cad/ots-parts/` fetch line and row the same way. A survey ledger carries the prose its slice needs around those sections — what the channel is worth, which pages refused to fetch, the verbatim strings you read — and opens with the quality warning that applies to every number in it.
@@ -48,6 +48,12 @@ One `##` section per part, appended as it is found. A CAD model's section carrie
 1. Manufacturer's own site first; distributor pages (Digi-Key, Mouser, McMaster-Carr) are acceptable sources for both datasheets and CAD models.
 2. Match the **exact** part number, suffix and revision included. A description ("a 6805 bearing", "an AK60-6") → find the candidate; its exact P/N is the thing to confirm.
 3. Extract the numbers the dispatch asked for, plus the part type's design drivers (stall and continuous torque, rated current and voltage, mass, principal dimensions, material limits), noting the section, table, or page each came off — that list becomes the row's `Clauses read`.
+
+### The stand-in question
+
+A part with a long lead time — custom-wound, machined to order, eight weeks from a distributor — holds bring-up hostage to its delivery. So a survey for one also asks whether a catalogue holds something close enough to **bench-test** the function with, never close enough to ship: a stand-in is a schedule hedge, not a substitute part, and it is judged on the quantities the bench needs rather than on every clause the real part meets. Combinations count — two stock items in series or parallel reach a rate, a length, or a load no single catalogue part does.
+
+The ledger carries a `## Stand-in` section either way: the candidate with its row and what it trades away, or the sentence `Nothing stock is close` with the ranges that ruled it out. A survey ledger is permanent, so the negative answer stays on the record and a later session reads a question that was asked rather than a silence.
 
 ## Confirm, then cache
 
@@ -62,7 +68,7 @@ The index is shared, and other librarians may be writing it right now, so every 
 
 ```bash
 cat >> docs/datasheets/index.md <<'ROW'
-| <P/N> | <Manufacturer> | <Key numbers> | <Clauses read> | <Source URL> | <Retrieved> | <File> |
+| <P/N> | <Manufacturer> | <Key numbers> | <Clauses read> | <Price> | <Source URL> | <Retrieved> | <File> |
 ROW
 ```
 
@@ -83,9 +89,11 @@ A PDF whose tables a later decision must quote clause by clause — a standard, 
 
 - Append one row to the table in `docs/datasheets/index.md`:
 
-| P/N | Manufacturer | Key numbers | Clauses read | Source URL | Retrieved | File |
+| P/N | Manufacturer | Key numbers | Clauses read | Price | Source URL | Retrieved | File |
 
 **Clauses read** is the sections, tables, or pages you actually opened and verified: `Table 1 (tensile), Table 2 (chemistry), Table 5 (tolerances)`, `brief p3, p5`. It bounds the row — a number outside those clauses was never checked — so a reviewer reads what is still open to ask for instead of re-asking what the row answers.
+
+**Price** is the published list price at the quantity break it applies to — `€5.11 @ 1`, `$18.40 @ 10`, both where a project buys at both. The row's `Retrieved` date is the price's date too, which is what makes a price readable as stale. A part whose vendor publishes no price reads `quote only`: the sticker-price route is closed for it, and its cost stays a guess until a human asks a vendor. Record the currency as published and convert nowhere.
 
 - CAD models: `curl` the STEP (vendor-native as fallback) to `cad/ots-parts/<PN>.step` and append to `cad/ots-parts/index.md`:
 
