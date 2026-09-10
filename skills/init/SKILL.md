@@ -106,7 +106,10 @@ it appears.
 - Any change to a mass, power draw, or cost updates
   docs/01-spec/budgets.md (created by armature-spec) in the same session. A cost
   estimate cites the index row whose Price it reads; a part priced `quote only`
-  stays a guess until a human asks a vendor.
+  stays a guess until a human asks a vendor. Nothing debits a reserve line item
+  directly — a debit elsewhere debits it, and one that drives its margin negative
+  breaches the requirement it holds: fail that REQ in the row and in
+  docs/01-spec/traceability.md, not in a sentence above the table.
 - Every design decision gets a line in docs/decisions.md. When all three
   hold — hard to reverse, surprising without context, a real trade-off —
   it also gets a short ADR in docs/adr/ (`NNNN-slug.md`, a paragraph;

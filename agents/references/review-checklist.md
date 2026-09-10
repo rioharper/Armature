@@ -20,6 +20,7 @@ The families where robotics designs fail review, in working order: the early one
 - **Re-run the feasibility math** with the artifact's own numbers. Does it close at the edge of the envelope, or only at nominal?
 - **Margins**: is each sized to its stakes? Actuator torque, structural stress, thermal, power, current. State the margin the consequence warrants and compare to what is there.
 - **Budgets** (`docs/01-spec/budgets.md`): current estimates against each budget, and whether recent changes were debited at all.
+- **Reserves**: a reserve row holds a Must requirement, so its margin is a pass/fail, not a reading — negative means the reserve is breached and that REQ has failed. Recompute it: ceiling minus every other line's current estimate, against what the REQ demands. A breach the prose above the table admits while the row's margin and `docs/01-spec/traceability.md` still read healthy is a Blocker; so is a debit that grew a line item and left the reserve untouched.
 - **Assumptions vs. envelope**: for every assumption the derivation names (rigid links, neglected friction, lumped rotor inertia), does the real operating range cross the line where it breaks?
 - **Singularities & workspace**: does any singularity sit *inside* the region the robot must work in?
 - **Units and signs**: check them explicitly.
