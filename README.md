@@ -24,7 +24,9 @@ logged, and a red-team pass before anything gets built or bought.
 | Not sure it's worth building, or for whom | `armature-pitch` |
 | Pitch settled; need the engineering spec, a trade study, or a design review | `armature-spec` |
 | Spec in hand; need phases and the shared vocabulary later sessions will use | `armature-plan` |
+| A machine joins the project (sim host, render host, target board) | `armature-plan` on that machine: it probes into `docs/environment.md` and updates the machine split |
 | Need equations of motion, a Jacobian, workspace or actuator-sizing math | `armature-derive` |
+| A plan's analysis task has come due | `armature-derive`, landing a decision report |
 | Ready to model a part, or to check a modeled part's mass and inertia against the dynamics | `armature-cad` |
 | Want to understand a concept, or why your own design behaves as it does | `armature-teach` |
 | Writing firmware, ROS nodes, or control code | `armature-test` (fires on its own) |
@@ -34,7 +36,8 @@ logged, and a red-team pass before anything gets built or bought.
 | An effort too big or foggy for one session | `armature-wayfind` |
 | An artifact is drafted; CAD hours or purchases are next | `armature-red-team` |
 | Design stuck or conventional; unusual requirements | `armature-inventor` |
-| Need a datasheet or a vendor CAD model | `armature-librarian` |
+| Need a datasheet, a list price, a vendor CAD model, or a stock stand-in for a long-lead part | `armature-librarian` |
+| SolidWorks checks stopped connecting after a plugin update | `/armature:init`, which repoints the project's `.mcp.json` |
 
 The stage skills fire on their own when the conversation fits; `init` and
 `armature-debug` are typed.
@@ -47,9 +50,9 @@ main conversation, handing its output to the next:
 | Stage | Skill | Produces |
 |---|---|---|
 | 1 | `armature-pitch` | who it's for, why it beats what exists. Interrogates *why*, not *how*. |
-| 2 | `armature-spec` | engineering spec, trade studies, design-driver BOM, living budgets, requirements traceability. |
-| 3 | `armature-plan` | phased implementation plan and the shared vocabulary (frames, symbols, naming) that keeps later sessions grounded. |
-| 4 | `armature-derive` |  milestone-sized derivation notes and a re-runnable, cross-verified Python model. |
+| 2 | `armature-spec` | engineering spec (software and compute architecture included), trade studies, design-driver BOM, living budgets, requirements traceability. |
+| 3 | `armature-plan` | phased implementation plan cut into one-session leaves, the machine split, and the shared vocabulary (frames, symbols, naming) that keeps later sessions grounded. |
+| 4 | `armature-derive` |  milestone-sized derivation notes and a re-runnable, cross-verified Python model laid out to a line budget; a decision report for each analysis task the plan names. |
 | 5 | `armature-cad` |  per-part definitions (interfaces, loads, material, datums, tolerances, inertia targets), assembly mate schemes, and a build recipe for the chosen CAD package. |
 
 Cross-cutting skills and agents, pulled in from any stage:
@@ -102,7 +105,8 @@ Not a dependency and not a CAD replacement — no assemblies, drawings, GD&T,
 or FEA. Tested against build123d 0.11.1; run it with
 `uv run --with 'build123d~=0.11' --with sympy python cad/parts/<PART-ID>.py`
 (`--with sympy` because the recipe reads `analysis/model/params.py`, which
-imports it), and `cad/parts/run_all.py` the same way for every self-test.
+imports it), and `cad/parts/run_all.py` the same way for every self-test and
+the code-line budget.
 Nonzero exit means a check failed.
 
 ## Example output
@@ -122,6 +126,7 @@ From a real project run with Armature — the Ibex rover, a squatting camera pla
 ```
 <project>/
   CLAUDE.md                  project constitution (§4)
+  CONTEXT.md                 project glossary, written by armature-plan
   docs/
     00-concept/
       concept-brief.md       armature-pitch output (RC-xxx requirements)
@@ -136,10 +141,15 @@ From a real project run with Armature — the Ibex rover, a squatting camera pla
     reviews/                 red-team findings, dated
     research/                inventor briefs
     datasheets/
-      index.md               P/N, source URL, retrieval date, key numbers
-      *.pdf                  cached datasheets
+      index.md               P/N, key numbers, clauses read, price, source, retrieval date
+      *.pdf                  cached datasheets (or HTML snapshots, image + transcript)
+      <task>-<subject>-<slice>.md  librarian survey records
+      staging/               librarian runs not yet merged into the index
     decisions.md             one-line-per-decision log (§6.7)
-  analysis/                  armature-derive derivations (.md) + model (.py)
+    environment.md           what each machine has installed, dated, from the probe
+  analysis/
+    derivation/              armature-derive milestone notes (.md)
+    model/                   re-runnable model (.py), laid out per references/model-layout.md
   cad/
     parts/                   part definitions (.md), + optional runnable
                              build recipes (.py) and their SVG views
@@ -147,6 +157,7 @@ From a real project run with Armature — the Ibex rover, a squatting camera pla
     ots-parts/
       index.md               model file → P/N → datasheet entry
       *                      vendor STEP/native models
+  .mcp.json                  SOLIDWORKS projects only, gitignored
   .gitignore
 ```
 
