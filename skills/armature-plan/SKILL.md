@@ -11,6 +11,22 @@ You take a finished (or finished-enough) engineering spec and turn it into a pla
 
 Read `docs/01-spec/spec.md`, `docs/01-spec/bom.md`, `CLAUDE.md`, and `CONTEXT.md` (if present) from disk — the spec is normally produced by **armature-spec**. If no spec exists, do a compressed requirements capture (mission, constraints, chosen architecture, builder capability) and note in the plan that it rests on an informal spec — or, for a substantial project, offer armature-spec: on yes, call the Skill tool with "armature-spec". If the spec is still foggy — more open decisions than one session can settle — call the Skill tool with "armature-wayfind" to chart the way first. Audience and differentiation are settled upstream, in **armature-pitch**'s concept brief if one exists; take them as given.
 
+**Probe the machine before you estimate.** Run the plugin's environment probe,
+passing the tools this spec actually names as arguments:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/env-probe.sh" ros2 gazebo cuda
+```
+
+Re-probe on **every** invocation, a re-plan at a phase gate included, and
+rewrite this machine's section of `docs/environment.md` with today's date, so
+the record is never older than the last plan written against it. Format and the
+one-section-per-machine rule: `references/environment-record.md`, two levels
+above this skill. An absence the plan depends on becomes explicit Phase 0 work
+with hours against it rather than a footnote — a missing ROS 2 and Gazebo are
+that phase's first tasks, and a machine with no CUDA is a dependency on some
+other machine, not a slower schedule.
+
 Before writing, resolve with the user: available hours per week, hard deadlines, whether analysis (kinematics/dynamics) precedes or parallels CAD, and any gaps the spec left open. Their calendar is theirs to state, never yours to assume.
 
 Work these questions in rounds. Each round, ask the **frontier** — the questions whose prerequisites are already settled (a phase-ordering question waits until the spec gap that drives it is resolved); recompute the frontier after each round. Deliver rounds through the AskUserQuestion tool, your recommended answer as the first option labeled "(Recommended)", so a single word can accept it; the tool takes 4 questions per call, so a larger frontier spans consecutive calls within the round. Facts are your job; decisions are the user's: send a lookupable (a lead time, a part's availability, a datasheet number) to the **armature-librarian** agent and keep asking the rest of the frontier while it runs — several at once go in waves of two or three per the plugin's `references/subagent-dispatch.md` (two levels above this skill).

@@ -10,11 +10,27 @@ The current folder is the project root.
 
 ## 1. Guard
 
-If `CLAUDE.md` here already carries a `**Stage:**` line, this is an Armature project: report its stage and stop. A `CLAUDE.md` without one is somebody else's file: ask through AskUserQuestion whether to merge the template into it or replace it, and carry that answer into step 3.
+If `CLAUDE.md` here already carries a `**Stage:**` line, this is an Armature project: report its stage and stop. A `CLAUDE.md` without one is somebody else's file: ask through AskUserQuestion whether to merge the template into it or replace it, and carry that answer into step 4.
 
 The stop carries one repair: where `.mcp.json` names a `mcp/solidworks/server.py` path that no longer exists — a plugin update moved it — offer to rewrite that path from the current `${CLAUDE_PLUGIN_ROOT}`. Report and repair is the whole of a re-run; a project that has no `.mcp.json` wanted none.
 
-## 2. Setup interview
+## 2. Probe the machine
+
+Run the plugin's environment probe and keep its output for the next two steps:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/env-probe.sh"
+```
+
+It prints `KEY=VALUE` and exits 0 whatever it finds, because an absence here is
+something to plan around rather than an error. `PYTHON` is the invocation that
+works on this machine — `py` and `absent` are different answers, and reading
+them as the same is what put a stale "python is not on PATH" note in a project
+that had python all along. Step 4 writes the result to `docs/environment.md`;
+its format and rules are `references/environment-record.md`, two levels above
+this skill.
+
+## 3. Setup interview
 
 Ask through the AskUserQuestion tool:
 
@@ -22,16 +38,20 @@ Ask through the AskUserQuestion tool:
 2. CAD package: SOLIDWORKS / Fusion 360 / Onshape / undecided.
 3. On SOLIDWORKS only: connect the SolidWorks MCP server to this project? It
    lets armature-cad's Done-when checks measure the live model instead of
-   asking you to transcribe numbers, and it needs Windows, [uv](https://docs.astral.sh/uv/)
-   on PATH, and SolidWorks running while those checks run. Yes seeds
-   `.mcp.json` in step 3, and Claude Code asks you to approve it on the next
+   asking you to transcribe numbers. Two of its three prerequisites are
+   already answered: state Windows and [uv](https://docs.astral.sh/uv/) on PATH
+   from step 2's `OS_KIND` and `UV` instead of asking the user to vouch for
+   them, and where either is missing, say so and recommend no — the server
+   cannot start. The third — SolidWorks running while those checks run — is
+   never true in advance, so it stays a question. Yes seeds
+   `.mcp.json` in step 4, and Claude Code asks you to approve it on the next
    start. Every other answer leaves the project with no MCP server, which is
    why a Fusion, Onshape, or undecided project never sees one fail.
 4. Builder profile: solo or team; fabrication access (printer, machining, hand tools); experience level.
 
 Done when every placeholder in the template below has a value.
 
-## 3. Scaffold
+## 4. Scaffold
 
 Create (bash):
 
@@ -55,9 +75,14 @@ Seed these files:
   docs/datasheets/<task>-<subject>-<slice>.md. -->`,
   and the empty table
   `| P/N | Manufacturer | Key numbers | Clauses read | Price | Source URL | Retrieved | File |`.
+- `docs/environment.md` from step 2's output, in the shape
+  `references/environment-record.md` gives: one section for this machine,
+  headed by hostname, OS, and today's date, closing with the gaps this project
+  will actually feel — a missing SciPy blocks **armature-derive**, a missing
+  `gh` blocks the issue tracker. No gap stops the scaffold.
 - `cad/ots-parts/index.md`: header + empty table
   `| File | P/N | Datasheet row | Source URL | Retrieved |`.
-- `.mcp.json`, only where step 2 said yes to the server:
+- `.mcp.json`, only where step 3 said yes to the server:
   `{"mcpServers": {"solidworks": {"command": "uv", "args": ["run",
   "<plugin root>/mcp/solidworks/server.py"]}}}`. Write `<plugin root>` as the
   absolute path `${CLAUDE_PLUGIN_ROOT}` holds — a *project* `.mcp.json` is
@@ -84,7 +109,7 @@ Then `git init` (if not already a repo), stage only the files this scaffold
 created or changed, and commit as `Initialize Armature project scaffold`.
 Done when `git ls-files` lists every scaffolded directory.
 
-## 4. CLAUDE.md template
+## 5. CLAUDE.md template
 
 ```markdown
 # <Project Name>
@@ -130,6 +155,10 @@ it appears.
   create the directory with the first one) linked from that line.
 - OTS CAD models live in cad/ots-parts/ with an index row linking
   model → P/N → datasheet.
+- The machines this project is built on are recorded in
+  docs/environment.md, dated, one section each. Read it before assuming a
+  tool is installed; refresh it by re-running the plugin's
+  scripts/env-probe.sh, never by editing the file.
 - Every artifact write ends in a git commit.
 
 ## Builder profile
@@ -140,7 +169,7 @@ it appears.
 - Experience: <answer>
 ```
 
-## 5. Hand off
+## 6. Hand off
 
-Report the scaffold commit, then call the Skill tool with "armature-pitch"
+Report the scaffold commit and any gap `docs/environment.md` names, then call the Skill tool with "armature-pitch"
 and begin the interview in this session.
