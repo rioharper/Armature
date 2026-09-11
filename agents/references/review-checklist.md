@@ -14,6 +14,7 @@ The families where robotics designs fail review, in working order: the early one
 - Does every **Must** requirement map to a design element that satisfies it *and* a test that proves it? In `docs/01-spec/traceability.md`, a Must REQ with no analysis or test row is a hole.
 - Any **orphan design** — subsystems or features that trace to no requirement? Each is a missing requirement or gold-plating.
 - Do the numbers **survive the chain** mission → requirement → feasibility calc → chosen part → BOM? Each hop preserves the number or explains why it changed.
+- **Routed items**: a decision report's *Items routed here* table is the exit ledger for everything sent to that task. Read it against the sources that did the routing — the plan's task line, the Route lines of earlier reports in `docs/reviews/`, the TBDs of the milestone notes — and name every item with no row. An item with no row is an item lost, and it was routed because someone judged it load-bearing.
 
 ## 3. Physics, math, and budgets
 
@@ -21,10 +22,13 @@ The families where robotics designs fail review, in working order: the early one
 - **Margins**: is each sized to its stakes? Actuator torque, structural stress, thermal, power, current. State the margin the consequence warrants and compare to what is there.
 - **Budgets** (`docs/01-spec/budgets.md`): current estimates against each budget, and whether recent changes were debited at all.
 - **Reserves**: a reserve row holds a Must requirement, so its margin is a pass/fail, not a reading — negative means the reserve is breached and that REQ has failed. Recompute it: ceiling minus every other line's current estimate, against what the REQ demands. A breach the prose above the table admits while the row's margin and `docs/01-spec/traceability.md` still read healthy is a Blocker; so is a debit that grew a line item and left the reserve untouched.
-- **Assumptions vs. envelope**: for every assumption the derivation names (rigid links, neglected friction, lumped rotor inertia), does the real operating range cross the line where it breaks?
+- **Price staleness**: a cost row is only as fresh as the `Retrieved` date of the `docs/datasheets/index.md` row it cites — that date is the price's date, and the only thing that says it has gone off. Check it against today's. Over six months with nothing re-read is a Minor; a cost margin that closes only on a price over a year old, or that is thinner than the drift its category has shown (a Jetson dev kit's list price rose 60 % in nineteen months), is a Major; a purchase authorised on one is a Blocker. Route the fix to the `armature-librarian` agent — re-reading a vendor page needs the web, which you do not have.
+- **Assumptions vs. envelope**: for every assumption the derivation names (rigid links, neglected friction, lumped rotor inertia), does the real operating range cross the line where it breaks? A report's *Assumptions under strain* owes each one the **direction and size** its model gives — swept, with what the result reads at each end, and the task that closes it named. One listed without that is one nobody swept.
 - **Singularities & workspace**: does any singularity sit *inside* the region the robot must work in?
 - **Units and signs**: check them explicitly.
+- **Printed, not typed**: every table in a derivation report is printed from `analysis/model/`. Run `run_all.py` and match the report's tables against what it prints; a number with no module printing it was typed by hand, and a typed number goes stale in silence when the model moves under it.
 - **Datasheet reality**: are the numbers driving the design confirmed from datasheets (`docs/datasheets/index.md` rows), or assumed? An assumed number inside a load-bearing calculation is a Question at best and a Blocker at worst. A row's **Clauses read** cell bounds what was verified — probe what it leaves open, and take as answered what it covers. A row marked **CANDIDATE, pending user confirmation** is unconfirmed: a design resting on one is a Blocker.
+- **Book data**: a constant tagged `standard` in `params.py` — fatigue endurance points, finite-life tables, friction pairs, form factors — has no index row to cite, so it names its book, edition, and the table or figure it sits in, and carries a **second independent source** with the design sized to the conservative of the two. A book named without its table is memory. One source is a margin resting on one fit: shot-peened spring-wire endurance points differ by 30 % between two standard sources that agree within 6 % unpeened.
 
 ## 4. Interfaces
 
