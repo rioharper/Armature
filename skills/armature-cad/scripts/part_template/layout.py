@@ -1,16 +1,16 @@
 """
-layout.py — the code-line budget every module in this model is held to.
+layout.py — the code-line budget every module in cad/parts/ is held to.
 
 The rules live in the plugin's `references/model-layout.md`; this file is how
 a copied project enforces them without access to the plugin. Stdlib only, so
-it runs where SymPy and SciPy do not:
+it runs where build123d does not:
 
-    python analysis/model/layout.py     # the size table; exit 1 on a violation
+    python cad/parts/layout.py     # the size table; exit 1 on a violation
 
-`run_all.py` discovers the checks below like any other, so the full run and
-`pytest` fail on a module over budget. Running one milestone
-(`run_all.py kinematics`) leaves them out: a file still being written is not
-red-barred mid-work. The same file ships in armature-cad's part template.
+`run_all.py` discovers the checks below like any other, so the full run
+fails on a module over budget. Running one module or package
+(`run_all.py check`) leaves them out: a file still being written is not
+red-barred mid-work. The same file ships in armature-derive's model template.
 """
 
 import ast
@@ -24,8 +24,9 @@ MILESTONE = (99, "Layout: code-line budget")
 BUDGET = 250
 EXEMPT = "LAYOUT_EXEMPT"
 HERE = Path(__file__).resolve().parent
-# Reported beside the modules for information only; notes carry no budget.
-NOTES = HERE.parent / "derivation"
+# Reported beside the modules for information only; part definitions carry
+# no budget.
+NOTES = HERE
 
 _NOT_CODE = {tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT,
              tokenize.DEDENT, tokenize.ENCODING, tokenize.ENDMARKER}
@@ -139,7 +140,7 @@ if __name__ == "__main__":
                 else "  OVER BUDGET" if count > BUDGET else "")
         print(f"{where:<34}{count:>11}{flag}")
     if NOTES.is_dir():
-        print(f"\n{'note (information only)':<34}{'lines':>11}")
+        print(f"\n{'document (information only)':<34}{'lines':>11}")
         for note in sorted(NOTES.glob("*.md")):
             lines = len(note.read_text(encoding="utf-8").splitlines())
             print(f"{note.name:<34}{lines:>11}")

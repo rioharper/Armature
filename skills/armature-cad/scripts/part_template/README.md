@@ -32,36 +32,43 @@ What that buys, in order of value:
 
 | File | Role |
 |---|---|
-| `check.py` | Library. Mass properties in SI, target comparison, parameter-rebuild sweeps, interference, SVG views. **Holds the unit contract — read its docstring first.** |
+| `check/` | Library package. Mass properties in SI, target comparison, parameter-rebuild sweeps, interference, SVG views, one submodule each. **Holds the unit contract — read `check/__init__.py`'s docstring first.** |
 | `part.py` | Template for `cad/parts/<PART-ID>.py`. Worked example: the plate-with-a-boss from SKILL.md. Copy and edit. |
-| `sweep.py` | Template for a planning-stage interference sweep. Worked example: planar 2R arm folding into its base housing. |
+| `sweep/` | Template for a planning-stage interference sweep. Worked example: planar 2R arm folding into its base housing. Replace the bodies and `pose()` in `sweep/bodies.py`. |
 | `stubs.py` | COTS placeholders for when armature-librarian can't find a vendor STEP. Enforces datasheet provenance; its release gate `still_placeholder()` only sees stubs *this process built* — read its docstring before gating on it. |
+| `run_all.py`, `layout.py` | The runner and the code-line budget, the same files armature-derive's model template ships. |
 
-Each file runs its own self-tests via `demo()`:
+The files follow the plugin's `references/model-layout.md`: each module's
+self-tests live one file over in its `*_checks.py` (`part.py` →
+`part_checks.py`, copied as `<PART-ID>_checks.py`; `check/mass.py` →
+`check/mass_checks.py`), and no module passes 250 code lines. One command
+runs every self-test and the budget; the other two run the things
+themselves:
 
 ```bash
-uv run --with 'build123d~=0.11' python check.py  # units, parallel axis, containment
-uv run --with 'build123d~=0.11' python stubs.py  # envelopes, provenance stamp
-uv run --with 'build123d~=0.11' --with sympy python sweep.py  # self-tests, then the sweep
-uv run --with 'build123d~=0.11' --with sympy python part.py   # mass props vs target + SVG views
+uv run --with 'build123d~=0.11' --with sympy python run_all.py        # every self-test, then the budget
+uv run --with 'build123d~=0.11' --with sympy python run_all.py check  # one module or package's self-tests
+uv run --with 'build123d~=0.11' --with sympy python part.py           # mass props vs target + SVG views
+uv run --with 'build123d~=0.11' --with sympy python -m sweep          # the sweep
+python layout.py                                                      # the size table, stdlib only
 ```
 
 **The exit code is the contract: nonzero means a check failed**, which is
-what makes these usable in a pre-commit hook or CI. `sweep.py`'s worked 2R
-arm genuinely folds into its own base post, so `python sweep.py` prints the
+what makes these usable in a pre-commit hook or CI. `sweep/`'s worked 2R
+arm genuinely folds into its own base post, so `python -m sweep` prints the
 colliding pairs and **exits 1 by design** until the swept range excludes the
-collision. `check.py`, `stubs.py`, and `part.py` exit 0.
+collision. `run_all.py`, `part.py`, and `layout.py` exit 0.
 
-`part.py` and `sweep.py` both need `--with sympy`, since both import
+`part.py` and `sweep/` both need `--with sympy`, since both import
 `analysis/model/params.py`, which imports it. Both locate that file
-*relative to their own path* — `../../analysis/model/` — so keep them two
-directories below the project root (`cad/parts/`). `part.py`'s mass target
-falls back to a budget row when there is no derivation yet, and says so in
-its printed provenance line; `sweep.py`'s link lengths have no fallback
+*relative to their own path* — `../../analysis/model/` from `cad/parts/` —
+so keep them two directories below the project root. `part.py`'s mass
+target falls back to a budget row when there is no derivation yet, and says
+so in its printed provenance line; the sweep's link lengths have no fallback
 (a guessed link length hides a real self-collision or invents one), so
-running it — `demo()` included — needs `params.py` present: copy it in, or
-run the armature-derive milestone that produces it, first. `import sweep`
-alone never needs it.
+running it — its self-tests included — needs `params.py` present: copy it
+in, or run the armature-derive milestone that produces it, first. Importing
+the package alone never needs it.
 
 ## Prerequisite
 
@@ -74,8 +81,8 @@ deliberate: this code depends on API details that have moved before —
 `matrix_of_inertia` is about the COM in mm⁵ (volumetric, density = 1),
 `center_of_mass` does not exist (it is `center(CenterOf.MASS)`), and
 `intersect` returns `None` rather than an empty result for disjoint shapes.
-Before relaxing the bound, re-run all four `demo()` self-tests; they fail
-loudly if any of those change.
+Before relaxing the bound, re-run `run_all.py`; its self-tests fail loudly
+if any of those change.
 
 To install into a project properly:
 
@@ -86,9 +93,9 @@ uv add 'build123d~=0.11'      # or: pip install 'build123d~=0.11'
 ## The two rules
 
 **Units.** build123d is millimetre-native; `params.py` is SI. `mm()` in
-`check.py` is the only place a factor of 1000 may appear, and everything
-`check.py` returns is SI, because the comparison happens in the
-derivation's units. The full contract is `check.py`'s docstring.
+`check/` is the only place a factor of 1000 may appear, and everything
+`check/` returns is SI, because the comparison happens in the derivation's
+units. The full contract is `check/__init__.py`'s docstring.
 
 **One source of truth.** The `.py` never restates a dimension that lives in
 `params.py` or an interface table — it imports them. A `.md` and a `.py`

@@ -1,0 +1,158 @@
+"""
+sweep/bodies_checks.py — self-tests for bodies.py: the sweep finds a
+collision that is there and none for a mechanism that clears, the pair
+excuses hold what their comments claim, and link lengths come from params.py
+or nowhere. Each is written to FAIL if the guard it covers is removed.
+"""
+
+import importlib
+import math
+import sys
+import tempfile
+from pathlib import Path
+
+from build123d import Box, Location, Rotation
+
+from check import interference, sweep_clearance
+from sweep import bodies
+
+
+def _raised(exc_type, fn, *args, **kwargs):
+    """The exception `fn` raised, or None. A check that cannot fail is
+    not a check, so every use of this is asserted truthy."""
+    try:
+        fn(*args, **kwargs)
+    except exc_type as exc:
+        return exc
+    return None
+
+
+def test_folded_collides_straight_clears():
+    bodies.ensure_geometry()
+    # Folded hard back on itself, the forearm reaches the base post.
+    folded = bodies.pose((0.0, math.pi))
+    assert interference(folded["link2"], folded["base"]) > 0, "folded arm must hit the post"
+    # Straight out, nothing but the design-adjacent pairs touch.
+    straight = bodies.pose((0.0, 0.0))
+    assert interference(straight["link2"], straight["base"]) == 0.0
+    assert sweep_clearance(bodies.pose, [(0.0, 0.0)], ignore=bodies.ADJACENT) == []
+    print("  [PASS] folded arm hits the post, straight arm clears")
+
+
+def test_elbow_excused_in_geometry_not_by_threshold():
+    bodies.ensure_geometry()
+    # A threshold measured at home is provably wrong for the elbow pair
+    # (see the comment above ADJACENT) and flags 98.2% of the swept grid.
+    # A blanket pair-ignore reports ONLY base<->link2 (5321.8 mm^3) at
+    # q2=180 and hides link1<->link2 completely; both must be visible,
+    # worst first. base<->link1 stays quiet - its constant 35321.8 mm^3 is
+    # exactly its own threshold, never above it.
+    hits = sweep_clearance(bodies.pose, [(0.0, math.pi)], ignore=bodies.ADJACENT)
+    assert [(h[1], h[2]) for h in hits] == [("link1", "link2"), ("base", "link2")], hits
+    # The fully-folded overlap is 276000 mm^3, not the 300000 an untrimmed
+    # link2 gives (the trim removes a 20x40x30 mm slab that would otherwise
+    # be in there). Asserted so JOINT_TRIM's comment can't drift from it.
+    assert math.isclose(hits[0][3], 276000.0), hits[0][3]
+
+    # Joint limits that keep the elbow inside JOINT_TRIM's clean zone must
+    # sweep clear: q2 within +-45 deg (well inside the measured 91 deg
+    # onset) at every q1 reports nothing.
+    limited = [(q1, q2) for q1 in (-math.pi, 0.0, math.pi / 2, math.pi)
+               for q2 in (-math.radians(45), 0.0, math.radians(45))]
+    assert sweep_clearance(bodies.pose, limited, ignore=bodies.ADJACENT) == [], "limited q2 must clear"
+
+    # A pair can still be fully excused - at a threshold explicitly wider
+    # than any overlap it will see - as a visible, tunable number.
+    wide = dict(bodies.ADJACENT)
+    wide[frozenset(("base", "link2"))] = math.inf
+    hits = sweep_clearance(bodies.pose, [(0.0, math.pi)], ignore=wide)
+    assert len(hits) == 1 and hits[0][1:3] == ("link1", "link2"), hits
+    print("  [PASS] elbow pair excused in geometry; both fold-in pairs reported")
+
+
+def test_elbow_onset_matches_the_trim_table():
+    bodies.ensure_geometry()
+
+    def elbow_onset(sign):
+        """First |q2| walking out from 0 where link1<->link2 interferes."""
+        for deg in range(1, 180):
+            p = bodies.pose((0.0, math.radians(sign * deg)))
+            if interference(p["link1"], p["link2"]) > 0.0:
+                return deg
+        raise AssertionError("no onset found in the scanned range")
+
+    # The TRUE onset, measured at 1 deg rather than trusted from
+    # JOINT_TRIM's comment, so a geometry change fails here first.
+    assert elbow_onset(1) == elbow_onset(-1) == 91  # JOINT_TRIM = LINK_W/2 = 20 mm
+
+    def isolated_onset(w1, w2, trim):
+        """pose()'s link1/link2 box-pivot geometry in isolation, so LINK_W
+        can't leak in and make the test trivially agree with itself."""
+        link1 = Box(bodies.L1, w1, bodies.LINK_H).locate(Location((bodies.L1 / 2, 0, 0)))
+        elbow = Location((bodies.L1, 0, 0))
+        l2len = bodies.L2 - trim
+        link2 = Box(l2len, w2, bodies.LINK_H).locate(Location((trim + l2len / 2, 0, 0)))
+        for deg in range(1, 180):
+            if interference(link1, elbow * (Rotation(0, 0, deg) * link2)) > 0.0:
+                return deg
+        raise AssertionError("no onset found in the scanned range")
+
+    assert isolated_onset(bodies.LINK_W, bodies.LINK_W, 10.0) == 31, "table row (trim=10mm) went stale"
+    # The rule ("size from the NEIGHBOUR's half-width") only matters when
+    # the links differ, which the worked example can't show: trim from
+    # link2's own half-width (wrong rule) onsets far earlier than from
+    # link1's (right rule) on a mechanism with a wider proximal link.
+    assert isolated_onset(60.0, 40.0, 20.0) == 46, "w2/2-sized trim (wrong rule)"
+    assert isolated_onset(60.0, 40.0, 30.0) == 91, "w1/2-sized trim (right rule)"
+    print("  [PASS] elbow onset and the trim-vs-onset table re-measured")
+
+
+def test_threshold_slop_holds_at_every_q1():
+    bodies.ensure_geometry()
+    # base<->link1's threshold IS the volume measured at q1=0; recomputing
+    # "the same" boolean at a DIFFERENT q1 differs in the last bits
+    # (measured: +2.18e-11 mm^3 across 37 q1 samples), and a bare
+    # `v > threshold` reports 444 of those as collisions. Assert across
+    # several q1, not only q1=0, which is bit-exact by construction.
+    for q1deg in (0, 45, 90, 135, 180, -90):
+        q = (math.radians(q1deg), 0.0)
+        p = bodies.pose(q)
+        assert sweep_clearance(bodies.pose, [q], ignore=bodies.ADJACENT) == [], (
+            q1deg, interference(p["base"], p["link1"]))
+    print("  [PASS] base<->link1 threshold absorbs OCC float noise at every q1")
+
+
+def test_link_lengths_come_from_params_or_nowhere():
+    def resolve_with(params_src):
+        """Resolve link lengths against a params.py written to a temp dir.
+
+        Every directory already holding a params.py is dropped from
+        sys.path for the duration: `import params` searches the whole
+        path, so a real params.py elsewhere would otherwise answer the case
+        meant to test having none. Same hermetic setup as part_checks.py.
+        """
+        saved = sys.path[:]
+        with tempfile.TemporaryDirectory() as tmp:
+            if params_src is not None:
+                Path(tmp, "params.py").write_text(params_src)
+            sys.path[:] = [tmp] + [p for p in saved if not Path(p or ".", "params.py").exists()]
+            sys.modules.pop("params", None)
+            importlib.invalidate_caches()
+            try:
+                return bodies._resolve_lengths()
+            finally:
+                sys.path[:] = saved
+                sys.modules.pop("params", None)
+
+    assert resolve_with("PARAMS = {'l1': 0.30, 'l2': 0.25}\n") == (300.0, 250.0)
+    # No params.py anywhere: fatal, not a fallback to a typed 300.0 /
+    # 250.0 - there is no safe placeholder for a link length.
+    assert _raised(RuntimeError, resolve_with, None)
+    # A renamed key, or no PARAMS table, is a broken link to the derivation,
+    # not a missing-module event: it propagates.
+    assert _raised(KeyError, resolve_with, "PARAMS = {'l1': 0.30}\n")
+    assert _raised(AttributeError, resolve_with, "NOT_PARAMS = {}\n")
+    # params.py failing its own import (e.g. no sympy) is NOT the same as no
+    # params.py at all - `exc.name != "params"` must re-raise it.
+    assert _raised(ModuleNotFoundError, resolve_with, "import definitely_not_a_real_module_xyz\n")
+    print("  [PASS] link lengths from params.py, no silent fallback")

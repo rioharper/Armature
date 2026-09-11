@@ -1,9 +1,11 @@
 """
 part.py — template for an executable build recipe.
 
-Copy to `cad/parts/<PART-ID>.py` beside the part's `<PART-ID>.md` and edit.
-Copy `check.py` into `cad/parts/` too — this file imports it from its own
-directory — and `stubs.py` as well if you need COTS placeholders.
+Copy to `cad/parts/<PART-ID>.py` beside the part's `<PART-ID>.md` and edit,
+and copy `part_checks.py` beside it as `<PART-ID>_checks.py` — its self-tests.
+Copy `check/`, `run_all.py`, and `layout.py` into `cad/parts/` too — this file
+imports `check` from its own directory — and `stubs.py` with `stubs_checks.py`
+if you need COTS placeholders.
 The .md is still the part definition — the contract, the loads, the
 rationale, the thing a human reads. This file is only its Build recipe
 section, written so a machine can run it and answer three questions the
@@ -15,10 +17,11 @@ markdown can't:
   * what does it look like?  (SVG views for the "At a glance" section)
 
 Run it:  uv run --with 'build123d~=0.11' --with sympy python cad/parts/<PART-ID>.py
-Exits nonzero when a check fails, so it works in a pre-commit hook or CI.
-(The version bound is deliberate — see the template README. `--with sympy`
-is for analysis/model/params.py, which imports it; drop it only if your
-params.py doesn't.)
+Exits nonzero when the part misses its target, so it works in a pre-commit
+hook or CI; `python cad/parts/run_all.py` runs its self-tests with every
+other module's. (The version bound is deliberate — see the template README.
+`--with sympy` is for analysis/model/params.py, which imports it; drop it
+only if your params.py doesn't.)
 
 THE ONE RULE: this file must never restate a dimension that already lives
 in `analysis/model/params.py` or in an interface table. It imports those.
@@ -177,7 +180,7 @@ def _resolve_target(param_key: str, allow_fallback: bool = ALLOW_BUDGET_FALLBACK
         #
         # The path comes from params.__file__, not from PARAMS_DIR. `import
         # params` searches ALL of sys.path — which includes this file's own
-        # directory, where you were told to put check.py and stubs.py — so a
+        # directory, where you were told to put check/ and stubs.py — so a
         # params.py dropped beside the part file resolves fine and naming
         # PARAMS_DIR would credit a file that was never read.
         return (
@@ -210,7 +213,7 @@ TARGET, PROVENANCE = _resolve_target(PARAM_KEY)
 #       props were taken about, and "point (0, 0, 0) mm" as a string is
 #       rejected rather than false-failing on formatting. Note that this
 #       one is in MM while everything around it is SI — it is a
-#       build123d-side point, and check.py's header says so.
+#       build123d-side point, and check/__init__.py's unit contract says so.
 TOL = 0.10
 
 
@@ -351,126 +354,5 @@ def main() -> int:
     return 0 if ok else 1
 
 
-def demo():
-    """Self-check: an assertion behind every guard in this file, each
-    written to FAIL if the guard it covers is removed.
-
-    The geometry assertions are about the WORKED EXAMPLE. When you replace
-    the recipe, replace them with the same question asked about your part —
-    they are the only thing standing between a silently wrong dimension and
-    a green run.
-    """
-    import importlib
-    import inspect
-    import math
-    import tempfile
-
-    def raised(exc_type, fn, *args, **kwargs):
-        """The exception `fn` raised, or None. A check that cannot fail is
-        not a check, so every use of this is asserted truthy."""
-        try:
-            fn(*args, **kwargs)
-        except exc_type as exc:
-            return exc
-        return None
-
-    # --- The target's provenance is the truth, or there is no run.
-    def resolve_with(params_src, key, allow=True):
-        """Resolve a target against a params.py written to a temp dir, and
-        return (target, provenance, that temp params.py).
-
-        EVERY directory on sys.path that holds a params.py is dropped for
-        the duration, not just PARAMS_DIR: `import params` searches the
-        whole path, including this file's own directory, so a project that
-        keeps params.py beside the part file would otherwise have its real
-        one answer the case that is meant to test having none.
-        """
-        saved = sys.path[:]
-        with tempfile.TemporaryDirectory() as tmp:
-            if params_src is not None:
-                Path(tmp, "params.py").write_text(params_src)
-            sys.path[:] = [tmp] + [p for p in saved if not Path(p or ".", "params.py").exists()]
-            sys.modules.pop("params", None)
-            importlib.invalidate_caches()
-            try:
-                return _resolve_target(key, allow_fallback=allow) + (Path(tmp, "params.py"),)
-            finally:
-                sys.path[:] = saved
-                sys.modules.pop("params", None)
-
-    renamed = "PARAMS = {'m_link1': 1.20}\n"  # what a re-derivation does
-    # params.py present, key gone. Swallowing that substitutes a hand-typed
-    # 0.105 kg, prints "no analysis/model/params.py yet" with params.py
-    # sitting right there, and exits 0.
-    assert raised(KeyError, resolve_with, renamed, "m1")
-    # A missing PARAMS table and a params.py whose own imports fail are the
-    # same class of event, and must not fail three different ways.
-    assert raised(AttributeError, resolve_with, "MASSES = {}\n", "m1")
-    assert raised(ModuleNotFoundError, resolve_with, "import no_such_module_xyz\n", "m1")
-
-    target, prov, real = resolve_with("PARAMS = {'m1': 0.104}\n", "m1")
-    assert target == {"mass": 0.104}
-    # The line must name the file that was actually imported. `import
-    # params` searches all of sys.path, so a params.py anywhere on it
-    # resolves — and printing the directory this template HOPED to read
-    # credits a file that was never opened. The module here is loaded from
-    # a temp dir, so naming PARAMS_DIR would be exactly that false credit.
-    assert prov == f"target driven from {real}[m1]", prov
-
-    # The fallback: opt-in, and honest about which of the two reasons it is.
-    target, prov, _ = resolve_with(None, "m1")
-    assert target == {"mass": BUDGET_MASS} and "FALLBACK" in prov, prov
-    assert raised(RuntimeError, resolve_with, None, "m1", False)
-    # An unset PARAM_KEY falls back even though params.py is RIGHT THERE,
-    # so the line must not claim the file is missing. Spelled out rather
-    # than read from PARAM_KEY, which you are expected to set.
-    target, prov, _ = resolve_with(renamed, "<params key for this body>")
-    assert "FALLBACK" in prov and "placeholder" in prov, prov
-    assert "no params.py" not in prov, prov
-    # Whatever the fallback produces still has to be a target check.py will
-    # accept — it raises on an empty one, and an empty one is a green gate.
-    assert isinstance(compare_to_target(mass_properties(build(), DENSITY), target), list)
-
-    # --- The boss follows the bore, and is measured off the solid.
-    def boss_wall(part, bore):
-        """Wall read off the finished part: its top face is the boss
-        annulus, area pi/4 * (od^2 - bore^2)."""
-        area = part.faces().sort_by(Axis.Z)[-1].area
-        return (math.sqrt(4 * area / math.pi + bore**2) - bore) / 2
-
-    for bore in (BORE, 24.0):
-        # Frozen at module scope this reads 5.00 mm at a 24 mm bore, and a
-        # wall <= 0 guard fires nowhere in the swept range.
-        assert math.isclose(boss_wall(build(bore=bore), bore), BOSS_WALL, abs_tol=1e-9)
-
-    # --- The probe sees the bore, because it runs on the finished part.
-    for bc in (22.0, 26.0):  # holes inside the bore / breaking into it
-        assert "bore" in str(raised(ValueError, build, bolt_circle=bc))
-    # Measured: a 28.6 mm bore builds clean on a 2.70 mm boss wall, with
-    # the bolt holes 1.05 mm into it.
-    assert "bore" in str(raised(ValueError, build, bore=28.6))
-    # Ordering cannot change the answer: the ring probe is contained in the
-    # FINISHED part, where a disc probe leaks its own holes.
-    assert contained(_pattern_probe(BOLT_CIRCLE), build())
-
-    # --- No dimension is both a parameter and a typed constant.
-    assert set(inspect.signature(build).parameters) == {"bolt_circle", "bore"}
-    assert raised(TypeError, build, plate_t=3.0)  # not a parameter at all
-
-    # --- The code applies the rule its comment states: EDGE_DIST of metal
-    # beyond the hole WALL, not from its centre. Both bounds are spelled out
-    # from the rule rather than from EDGE_REACH, so a probe measuring from
-    # the centre instead (limit 59.0 mm, not 54.5) fails the second one
-    # rather than moving with it. 1 mm inside the limit, as main()'s sweep
-    # is: at exactly 54.5 the probe's outer face lands on the plate edge,
-    # and betting a self-check on an OCCT boolean returning 0.0 rather than
-    # 1e-9 is a coin toss.
-    build(bolt_circle=PLATE_W - BOLT_CLEARANCE - 2 * EDGE_DIST - 1.0)  # 53.5
-    assert "plate" in str(raised(ValueError, build, bolt_circle=PLATE_W - 2 * EDGE_DIST - 1))
-
-    print("part.py self-tests passed (provenance, boss wall, bolt pattern vs bore/edge)")
-
-
 if __name__ == "__main__":
-    demo()
     sys.exit(main())

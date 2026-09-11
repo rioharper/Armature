@@ -42,7 +42,10 @@ A module's self-tests live in a sibling checks module named for it: `kinematics.
 neither file carries the other's lines. Discovery pairs the two by name, so moving a check
 costs no registration; pytest never collects a `*_checks.py` directly, so the one pytest
 bridge stays the only path and the two entry points cannot disagree. A checks module
-orphaned by a rename fails the layout check instead of silently never running.
+orphaned by a rename, or paired with a report module, fails the layout check instead of
+silently never running. A module named something `import` cannot spell — a part file,
+`ARM-BRK-001.py` — is loaded by its checks module through `importlib` under the checks
+module's own name, as the CAD template's `part_checks.py` shows.
 
 ## Reports print
 
@@ -59,13 +62,16 @@ Documentation is free; the only way under the budget is to split. `layout.py` co
 because a copied project cannot import the plugin:
 
 - `python layout.py` (in the template's directory) prints every module's count, and the
-  milestone notes' line counts for information — notes carry no budget — then exits
+  line counts of the documents beside them — milestone notes, part definitions — for
+  information, since documents carry no budget, then exits
   nonzero on a violation. It imports nothing but the standard library, so it runs where
   SymPy, SciPy, or build123d cannot.
-- In `analysis/model/`, `run_all.py` discovers `layout.py`'s checks like any other, so the
-  full run and `pytest` — the milestone checkpoint — fail on a module over budget. Running
-  one milestone (`run_all.py kinematics`) leaves them out: a file still being written is
-  not red-barred mid-work.
+- `run_all.py` — the same discovery runner in both templates — collects `layout.py`'s
+  checks like any other, so the full run fails on a module over budget: in
+  `analysis/model/` that run and `pytest` are the milestone checkpoint; in `cad/parts/`
+  it is the one command that runs every part file's and library's self-tests. Running one
+  name (`run_all.py kinematics`, `run_all.py check`) leaves the budget out: a file still
+  being written is not red-barred mid-work.
 
 A module that genuinely must stand large says why, at module level:
 

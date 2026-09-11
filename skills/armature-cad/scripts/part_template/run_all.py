@@ -1,30 +1,26 @@
 """
-run_all.py — every milestone's self-tests, in order, end to end.
+run_all.py — every self-test in cad/parts/, in order, end to end.
 
-Two commands run this model's checks, and both find their work here:
+    uv run --with 'build123d~=0.11' --with sympy python cad/parts/run_all.py
 
-    python analysis/model/run_all.py    # the milestone checkpoint command
-    pytest                              # through test_derivation.py
+Exits nonzero on the first failing check, which is what makes it a
+pre-commit hook or CI step. `--with sympy` is for analysis/model/params.py,
+which the part files and the sweep import.
 
 Discovery is by shape, not by name. A module in this directory, or one level
-down in a package, is a milestone module when it or its sibling checks module
-(`kinematics.py` -> `kinematics_checks.py`) defines callables named `test_*`;
-each of those callables is one check. Nothing in this file lists modules or
-tests, so a module added later — a `spring.py` for a plan task — is collected
-the moment it lands, and so is a test added to a checks module that already
-exists.
+down in a package, is collected when its sibling checks module
+(`part.py` -> `part_checks.py`, `check/mass.py` -> `check/mass_checks.py`)
+defines callables named `test_*`; each of those callables is one check.
+Nothing in this file lists modules or tests, so a part file added later is
+collected the moment its `<PART-ID>_checks.py` lands.
 
-That is deliberate. A hardcoded list is a list you forget to add to, and the
-self-tests you forget are exactly the ones that then never run.
+During development run one module or package by name:
 
-During development run one milestone by name — a module or a package:
+    python cad/parts/run_all.py check
 
-    python analysis/model/run_all.py kinematics
-
-It runs that milestone's checks without rebuilding the symbolic models of the
-milestones it isn't checking, and without the code-line budget in `layout.py`,
-which only the full run enforces. The same file ships in armature-cad's part
-template, where the modules it collects are part files and libraries.
+It runs that name's checks without the code-line budget in `layout.py`,
+which only the full run enforces. The same file ships in armature-derive's
+model template, where the modules it collects are milestones.
 """
 
 import importlib

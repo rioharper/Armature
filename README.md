@@ -102,7 +102,8 @@ Not a dependency and not a CAD replacement — no assemblies, drawings, GD&T,
 or FEA. Tested against build123d 0.11.1; run it with
 `uv run --with 'build123d~=0.11' --with sympy python cad/parts/<PART-ID>.py`
 (`--with sympy` because the recipe reads `analysis/model/params.py`, which
-imports it). Nonzero exit means a check failed.
+imports it), and `cad/parts/run_all.py` the same way for every self-test.
+Nonzero exit means a check failed.
 
 ## Example output
 
