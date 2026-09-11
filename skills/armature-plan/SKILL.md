@@ -11,8 +11,13 @@ You take a finished (or finished-enough) engineering spec and turn it into a pla
 
 Read `docs/01-spec/spec.md`, `docs/01-spec/bom.md`, `CLAUDE.md`, and `CONTEXT.md` (if present) from disk — the spec is normally produced by **armature-spec**. If no spec exists, do a compressed requirements capture (mission, constraints, chosen architecture, builder capability) and note in the plan that it rests on an informal spec — or, for a substantial project, offer armature-spec: on yes, call the Skill tool with "armature-spec". If the spec is still foggy — more open decisions than one session can settle — call the Skill tool with "armature-wayfind" to chart the way first. Audience and differentiation are settled upstream, in **armature-pitch**'s concept brief if one exists; take them as given.
 
-**Probe the machine before you estimate.** Run the plugin's environment probe,
-passing the tools this spec actually names as arguments:
+## Before writing
+
+Three checks, then the rounds. Each is cheap, and each is something the plan
+rests on silently when it is skipped.
+
+**Probe the machine.** Run the plugin's environment probe, passing the tools
+this spec actually names as arguments:
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/env-probe.sh" ros2 gazebo cuda
@@ -27,7 +32,48 @@ with hours against it rather than a footnote — a missing ROS 2 and Gazebo are
 that phase's first tasks, and a machine with no CUDA is a dependency on some
 other machine, not a slower schedule.
 
-Before writing, resolve with the user: available hours per week, hard deadlines, whether analysis (kinematics/dynamics) precedes or parallels CAD, and any gaps the spec left open. Their calendar is theirs to state, never yours to assume.
+**Split the work across machines.** The spec's §8.1 `Runtime host` column
+already answers what the robot runs on in the field, so ask only for the
+superset: the development machines that never ship — a sim host, a GPU box, a
+bench laptop, a target board on somebody else's desk. One machine that does all
+of it needs no section. The moment one cannot do another's work, the plan
+carries a `## Machine split` section:
+
+```markdown
+## Machine split
+
+Default machine: **sim host**; a leaf that runs elsewhere says so.
+
+| Role | Machine | Probed | What runs there |
+|---|---|---|---|
+| Sim host | this laptop, WSL2 Ubuntu 24.04, ROS 2 Jazzy | 2026-09-10 | physics, controller iteration, Phases 1–3 |
+| Render host | 64 GB / RTX 4090 box | not probed — T0.4 | splat training, image scoring |
+| Target | Jetson Orin Nano Super | not probed — T0.5 | the REQ-034 parity check |
+```
+
+`Probed` cites that machine's dated section of `docs/environment.md`. **A role
+the project needs that nobody has probed is the gap this prompt exists to
+surface**: probing it is a Phase 0 leaf with hours against it, because a machine
+assumed and never seen is an estimate resting on nothing, and access somebody
+still has to arrange is a dependency the schedule owes a date. Say what forces
+the split in a sentence under the table — a laptop with no CUDA cannot train
+what the spec asked for, whatever the calendar says.
+
+**Read every Must for satisfiability.** A Must is a promise the whole plan is
+cut to keep, so read each one as the conditions it actually imposes and ask what
+could satisfy all of them at once. It fails two ways, and the second is the
+quiet one: two Musts that cannot both hold (the mass budget against the
+stiffness one), and a *single* Must whose own clauses contradict each other —
+usually a term of art whose definition forbids the clause beside it ("open
+source, non-commercial": the OSI definition forbids field-of-use restrictions,
+so nothing satisfies both). Quantified and verifiable is not satisfiable, and a
+review reading requirements against *each other* slides straight past the second
+kind. Neither is yours to amend: name the requirement, say which reading you
+would keep and what it costs, and route it to **armature-spec** as a spec
+question — or carry the amendment as a Phase 0 leaf that closes by editing the
+spec and its revision history.
+
+Resolve with the user: available hours per week, hard deadlines, whether analysis (kinematics/dynamics) precedes or parallels CAD, and any gaps the spec left open. Their calendar is theirs to state, never yours to assume.
 
 Work these questions in rounds. Each round, ask the **frontier** — the questions whose prerequisites are already settled (a phase-ordering question waits until the spec gap that drives it is resolved); recompute the frontier after each round. Deliver rounds through the AskUserQuestion tool, your recommended answer as the first option labeled "(Recommended)", so a single word can accept it; the tool takes 4 questions per call, so a larger frontier spans consecutive calls within the round. Facts are your job; decisions are the user's: send a lookupable (a lead time, a part's availability, a datasheet number) to the **armature-librarian** agent and keep asking the rest of the frontier while it runs — several at once go in waves of two or three per the plugin's `references/subagent-dispatch.md` (two levels above this skill).
 
@@ -35,7 +81,30 @@ Work these questions in rounds. Each round, ask the **frontier** — the questio
 
 ## The plan document
 
-Write to `docs/02-plan/plan.md`. Structure:
+Write to `docs/02-plan/plan.md`. It opens with a header and closes with a
+revision history:
+
+```markdown
+# [Project] — Implementation Plan
+Rev 1.8 — 2026-09-09 — from spec Rev 1.3 (`docs/01-spec/spec.md`) and BOM Rev 0.4 (`docs/01-spec/bom.md`)
+
+…
+## Revision History
+| Rev | Date | Notes |
+```
+
+**The header is a rendering, never a memory.** Rewrite all three of its
+revisions from source every time you save the file: Rev and date from the top
+row of the Revision History table you just appended, the spec and BOM revs read
+fresh from those documents' own headers at that moment. There is then nothing
+to compare and nothing to drift — a header typed once and edited by hand sits
+three revisions behind the table beneath it, naming a spec rev the plan has
+already been re-cut past. A revision appends a row: what moved, which leaves
+closed with their actuals, and which numbers changed in the spec, BOM, or
+budgets because of it. Round checkpoints during the interview are drafts under
+one rev, not revisions of their own.
+
+Structure:
 
 ### 1. Glossary & conventions — written into `CONTEXT.md`
 
@@ -93,6 +162,8 @@ Every task gets:
 | `user` | hands-on work no skill performs: shop, bench, vendor contact, judgement calls |
 
 A leaf the skill drafts and the user executes names both, written `armature-bringup + user`. Dependencies explicit, exit criteria observable.
+
+A leaf that runs somewhere other than the plan's default machine names it too, written `Machine: render host`, citing a row of `## Machine split`. The default stays silent, so the field marks exactly the leaves that wait on access somebody has to arrange.
 
 **The unit is the session.** A leaf task is one agent session, roughly 100k tokens: finished, committed, and re-runnable from the repo alone. Where the session boundary and the hour estimate disagree, the session boundary wins. A parent task groups its leaves and keeps the number that later phases and the risk table cite; leaves are lettered (`T1.1a`), and a dependency on a parent means its last leaf. Three cuts a planner makes before a session discovers them:
 

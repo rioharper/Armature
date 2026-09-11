@@ -6,6 +6,7 @@ The families where robotics designs fail review, in working order: the early one
 
 - Is every requirement **quantified** (number + unit) and **verifiable** (a stated test / analysis / inspection / demo)? "Fast", "robust", "user-friendly" are aspirations.
 - Do any requirements **contradict** each other — mass budget vs. stiffness, top speed vs. runtime, precision vs. cost?
+- Does any single requirement **contradict itself**? A sweep that reads requirements against each other misses the one whose own clauses cannot both hold — usually a term of art whose definition forbids the clause beside it ("open source, non-commercial": the OSI definition forbids field-of-use restrictions, so nothing satisfies both). Quantified and verifiable is not satisfiable, and a Must written this way is unbuildable rather than tight.
 - What is **missing**? The ones forgotten until they bite: thermal limits, duty cycle, EMI/noise, ingress (dust/water), maintenance access, storage and transport, regulatory/safety, end-of-travel and e-stop behavior.
 - Do the success criteria capture the **actual mission**, or an easy-to-measure proxy for it?
 
