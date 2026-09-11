@@ -62,7 +62,7 @@ Mass Properties updates live as the model changes, so it doubles as a running ch
 
 ## 9. With the armature SolidWorks MCP connected
 
-If the `solidworks` MCP server is connected (ships with this plugin; needs SolidWorks running on Windows), run the Done-when checks against the live model instead of asking the user to transcribe numbers. The server measures; you judge — pass/fail lives in this conversation, against `params.py` and the part definition.
+If the `solidworks` MCP server is connected (`/armature:init` writes it into a SolidWorks project's `.mcp.json`; needs SolidWorks running on Windows), run the Done-when checks against the live model instead of asking the user to transcribe numbers. The server measures; you judge — pass/fail lives in this conversation, against `params.py` and the part definition.
 
 - **Mass loop (§5):** `sw_mass_properties(doc, coord_system=<the frame from 00_setup.md>)` → compare mass/COM/inertia to the `params.py` block, in SI, about the same point and axes. Route divergence per SKILL.md's Close the loop.
 - **Perturbation check:** for each driven parameter: `sw_set_params` to a ±10% value → `sw_rebuild` (must return no problems) → `sw_set_params` back → final `sw_rebuild`. Any feature in the problems list fails the check.

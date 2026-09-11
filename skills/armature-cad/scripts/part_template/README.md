@@ -67,7 +67,7 @@ alone never needs it.
 
 build123d, which pulls Open Cascade (~hundreds of MB). It is **not** a
 plugin dependency. `uv run --with` fetches it on demand and caches it, same
-pattern as the bundled SolidWorks MCP.
+pattern as the SolidWorks MCP server.
 
 **Written and tested against build123d 0.11.1.** The version bound is
 deliberate: this code depends on API details that have moved before —

@@ -12,16 +12,22 @@ The current folder is the project root.
 
 If `CLAUDE.md` here already carries a `**Stage:**` line, this is an Armature project: report its stage and stop. A `CLAUDE.md` without one is somebody else's file: ask through AskUserQuestion whether to merge the template into it or replace it, and carry that answer into step 3.
 
+The stop carries one repair: where `.mcp.json` names a `mcp/solidworks/server.py` path that no longer exists — a plugin update moved it — offer to rewrite that path from the current `${CLAUDE_PLUGIN_ROOT}`. Report and repair is the whole of a re-run; a project that has no `.mcp.json` wanted none.
+
 ## 2. Setup interview
 
 Ask through the AskUserQuestion tool:
 
 1. Project name and a one-line description.
-2. CAD package: SOLIDWORKS / Fusion 360 / Onshape / undecided. On
-   SOLIDWORKS, mention the bundled SolidWorks MCP server (`mcp/solidworks/`;
-   Windows, a running SolidWorks session, and `uv` on PATH) that lets
-   armature-cad's checks run against the live model.
-3. Builder profile: solo or team; fabrication access (printer, machining, hand tools); experience level.
+2. CAD package: SOLIDWORKS / Fusion 360 / Onshape / undecided.
+3. On SOLIDWORKS only: connect the SolidWorks MCP server to this project? It
+   lets armature-cad's Done-when checks measure the live model instead of
+   asking you to transcribe numbers, and it needs Windows, [uv](https://docs.astral.sh/uv/)
+   on PATH, and SolidWorks running while those checks run. Yes seeds
+   `.mcp.json` in step 3, and Claude Code asks you to approve it on the next
+   start. Every other answer leaves the project with no MCP server, which is
+   why a Fusion, Onshape, or undecided project never sees one fail.
+4. Builder profile: solo or team; fabrication access (printer, machining, hand tools); experience level.
 
 Done when every placeholder in the template below has a value.
 
@@ -51,6 +57,12 @@ Seed these files:
   `| P/N | Manufacturer | Key numbers | Clauses read | Price | Source URL | Retrieved | File |`.
 - `cad/ots-parts/index.md`: header + empty table
   `| File | P/N | Datasheet row | Source URL | Retrieved |`.
+- `.mcp.json`, only where step 2 said yes to the server:
+  `{"mcpServers": {"solidworks": {"command": "uv", "args": ["run",
+  "<plugin root>/mcp/solidworks/server.py"]}}}`. Write `<plugin root>` as the
+  absolute path `${CLAUDE_PLUGIN_ROOT}` holds — a *project* `.mcp.json` is
+  read without that substitution, so the placeholder itself would load
+  verbatim and fail.
 - `.gitkeep` in every scaffolded directory the seeds above leave empty (git
   drops empty directories).
 - `.gitignore`:
@@ -60,6 +72,8 @@ __pycache__/
 .pytest_cache/
 ~$*
 *.bak
+# absolute path into this machine's plugin install
+.mcp.json
 ```
 
 - `CLAUDE.md` from the template below, with the setup answers filled in.

@@ -1,9 +1,10 @@
 """Thin COM wrapper for the armature SolidWorks MCP. All COM lives here."""
 import itertools
 import os
-import pythoncom
-import win32com.client
-from win32com.client import VARIANT
+
+# COM is Windows-only, so these are bound by attach() rather than imported here:
+# the server then starts on any host and reports the platform per tool call.
+pythoncom = win32com = VARIANT = None
 
 
 class SwError(Exception):
@@ -20,6 +21,17 @@ class NameNotFound(SwError):
 
 
 def attach():
+    """Every tool enters here, so the COM imports do too."""
+    global pythoncom, win32com, VARIANT
+    if VARIANT is None:
+        try:
+            import pythoncom
+            import win32com.client
+            from win32com.client import VARIANT
+        except ImportError:
+            raise SwError(
+                "SolidWorks COM needs Windows and pywin32; this host has neither."
+            )
     pythoncom.CoInitialize()  # MCP tool calls may land on fresh threads
     try:
         disp = win32com.client.GetActiveObject("SldWorks.Application")

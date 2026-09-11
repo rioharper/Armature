@@ -65,10 +65,15 @@ Cross-cutting skills and agents, pulled in from any stage:
 | `armature-inventor` | agent | Frontier research: papers, novel mechanisms, unusual actuators/materials, it'll write briefs to `docs/research/`. |
 | `armature-librarian` | agent | Hunts datasheets and OTS CAD models, verifies part numbers, caches results to `docs/datasheets/` and `cad/ots-parts/`. |
 
-## SolidWorks MCP (bundled)
+## SolidWorks MCP (opt-in at init)
 
 Armature ships a verification-first SolidWorks MCP server (Windows +
-SolidWorks required; attaches to your running session). Requires [uv](https://docs.astral.sh/uv/) on PATH — the bundled server launches via `uv run`. It does not model
+SolidWorks required; attaches to your running session). Requires [uv](https://docs.astral.sh/uv/) on PATH — the server launches via `uv run`. It connects
+per project rather than per session: say yes to `/armature:init`'s SolidWorks
+question and init writes that project's `.mcp.json`, so a Fusion, Onshape, or
+undecided project never opens on a server it cannot use. The entry names the
+plugin version installed that day; re-run `/armature:init` after a plugin
+update and the guard repoints it. It does not model
 for you — it measures: mass properties about your project's frames,
 parameter sync and rebuild checks, interface dimensions, tolerances, and
 title-block properties, so the armature-cad Done-when checks run against
