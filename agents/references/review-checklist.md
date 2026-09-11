@@ -36,7 +36,7 @@ For every seam between subsystems, check it is defined **on both sides** and tha
 
 - **Mechanical** — mounting patterns, tolerances, load paths, clearance, service access. Can it be assembled, with a tool on every fastener afterward?
 - **Electrical** — voltage, continuous *and* peak current, connector pinouts, grounding. Does the driver's rating cover the motor's worst-case draw?
-- **Data** — protocol, rate, latency, timing, and the units and coordinate frames carried across the boundary. A frame convention that flips between two documents is a shipping bug.
+- **Data** — protocol, rate, latency, timing, and the units and coordinate frames carried across the boundary. A frame convention that flips between two documents is a shipping bug. Read these off the spec's §8 link table and name what is missing: a link with no budget, a budget with no verification method, a data artifact crossing units with no named schema owner, or a compute unit on a host no requirement forces it onto.
 - **Thermal** — where does the heat go? Is there a path, or does a component cook in a sealed bay?
 
 ## 5. Failure modes and safety (FMEA-lite)

@@ -89,21 +89,80 @@ or a floating base plus joints) or name coordinate frames; that's
 **armature-plan**'s job.
 
 ## 7. System Architecture
-Subsystem breakdown, interfaces between subsystems (mechanical, electrical,
-data), and driving requirements allocated to each subsystem.
+Subsystem breakdown, interfaces between subsystems (mechanical and
+electrical: mounting, load paths, connectors, rails, worst-case current),
+and driving requirements allocated to each subsystem. Every **data** path
+between subsystems is a link in §8 instead, so a protocol appears once.
 
-## 8. Feasibility Calculations
+## 8. Software & Compute Architecture
+Scale to consequence — a servo rig on one microcontroller is three rows and
+a paragraph; an autonomous platform is the full set. Answer every block;
+"n/a" needs one honest clause of why.
+
+### 8.1 Compute units
+| Unit | Runtime host | Responsibilities | Driving requirements |
+|------|--------------|------------------|----------------------|
+
+A **runtime host** is hardware the robot runs on in the field. The
+development machines that never ship — sim host, GPU box, bench laptop —
+are **armature-plan**'s machine split, built from this column.
+
+### 8.2 Links
+Every data path between units, named. A link with no numbers is not an
+interface.
+
+| Link | From → To | Transport | Budget | Verification |
+|------|----------|-----------|--------|--------------|
+
+*Transport* names the physical medium and the protocol riding it
+("UART2 TELEM2 → Pi PL011, 921600 baud, MAVLink v2"; "Wi-Fi 2.4 GHz,
+ROS 2 DDS"). *Budget* is rate, latency, and loss tolerance, with the REQ
+that sets it. *Verification* is a seam level — `unit`, `sim`, or `bench`
+— plus the measurement: "bench: round-trip latency under load, ≤ 40 ms
+p99". A budget only a physical measurement can settle reads `bench`, which
+is what **armature-test** will record as a bench seam.
+
+### 8.3 Data artifacts
+Files and blobs that cross between units: mission file, trajectory,
+calibration, map. A link is live traffic with a latency budget; an
+artifact is a file with a schema and a compatibility story.
+
+| Artifact | Written by | Read by | Schema | Versioned? |
+|----------|-----------|---------|--------|------------|
+
+### 8.4 Relocation
+Which unit could move to another host, what would force the move (a link
+that misses its budget, a compute ceiling), and what it costs. Design the
+interface so a move is a relocation, not a rewrite — and say here which
+moves that buys.
+
+### 8.5 ROS 2 graph
+Only when there is one. A robot without a ROS graph names its equivalent
+instead — firmware task list, serial command set — and says so.
+
+| Node | Host | Publishes | Subscribes | QoS |
+|------|------|-----------|------------|-----|
+
+QoS only where a topic carries a deadline or a reliability requirement.
+Services, actions, and parameters stay out until one of them carries a
+requirement of its own.
+
+This section does not organise the source tree. Packages, firmware
+targets, and repo split are implementation decisions the plan's software
+tasks make; the seams **armature-test** agrees are the links above.
+
+## 9. Feasibility Calculations
 Back-of-envelope checks that the physics closes: actuator sizing, energy
-budget, mass rollup, structural sanity, bandwidth/latency if relevant.
-Show arithmetic with units.
+budget, mass rollup, structural sanity, and the loop-latency rollup across
+§8.2's links where a control loop crosses one. Show arithmetic with units.
 
-## 9. Risk Register
+## 10. Risk Register
 | Risk | Likelihood | Impact | Mitigation | Revisit trigger |
 
-## 10. Open Questions
+## 11. Open Questions
 Numbered, each with a plan to resolve (prototype, calculation, vendor query).
 
-## 11. Out of Scope / Version 2
+## 12. Out of Scope / Version 2
 What was deliberately excluded, so nobody re-litigates it weekly.
 
 ## Mechanical safety

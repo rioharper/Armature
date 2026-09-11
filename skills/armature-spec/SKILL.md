@@ -31,13 +31,15 @@ Adapt questions to the project, but you are not done until you can answer these 
 4. **The builder** — What can the user (or team) actually make? Access to machining, 3D printing, welding? Software strength vs. mechanical strength? Prior projects? This is the foundations doc's honest capability assessment.
 5. **Actuation & sensing instincts** — Any hard requirements (backdrivability, precision, force control)? Any technologies already ruled in or out, and *why*?
 6. **Kinematic sketch** — Even roughly: how many degrees of freedom, and rotary or linear per joint? What must it reach — min/max radius, angular sweep, or linear travel? What's the payload's mass *range* (not just a nominal number) and roughly where does it sit relative to the tool point? How is the base mounted, and which way is gravity relative to the mechanism (horizontal reach, vertical stack, tilted, mobile-on-a-slope)? If the motion itself — not just holding a loaded pose — will drive the loads, get a target peak velocity/acceleration too, not just cycle time. For a machine that moves its own body, ask the platform reading of these — apex and ground range, touchdown speed, attitude envelope — per the platform mapping in `references/spec-template.md` §6. This feeds the parameter table **armature-derive** and the frame table **armature-plan** will need.
-7. **The unstated requirement** — Ask what happens when it fails, who maintains it, and what version 2 might need. These quietly drive architecture.
+7. **Compute & software** — What compute is already owned, or ruled in or out, and why? Where is the onboard / off-board boundary: what must run on the robot itself, and which latency, autonomy, or link-loss requirement forces it there? What crosses between the units — links with their rate and latency budgets, and data artifacts (mission file, calibration, map) with their schemas? And what does the robot do when a link degrades or drops? This fills `references/spec-template.md` §8, hands **armature-test** its candidate seams, and hands **armature-plan**'s machine split its runtime hosts.
+8. **The unstated requirement** — Ask what happens when it fails, who maintains it, and what version 2 might need. These quietly drive architecture.
 
 **Skeptic's duties during the interview:**
 - When you get an adjective, demand a number. "Fast" is not a requirement; "1 m/s ground speed" is.
 - When you get a mechanism, ask for the requirement hiding behind it. Users often spec their favorite solution; your job is to recover the actual problem.
 - Challenge scope. If the feature list implies three grad-student-years of work on a hobbyist timeline, say so plainly and force prioritization: must / should / could.
 - Name the physics early. If the numbers smell wrong (torque, energy density, thermal), do the back-of-envelope check *in the conversation* and show it.
+- A named link with no numbers is not an interface. Demand its rate and latency, and ask what the robot does when it degrades or drops. A node's home is a claim too: ask which requirement forces it onto that host.
 - Distrust unsourced specs. When a number rides in on a part the user hasn't shown you a datasheet for ("the motor does 2 N·m"), treat it as unverified: ask for the datasheet, dispatch **armature-librarian** to find it, or mark the value TBD.
 - It's fine to accept "I don't know" — but it goes in the spec as an open question or risk, never silently assumed away.
 - When an unknown lives in a third party's head — a professor, a vendor's application engineer, a machinist — offer a **questionnaire**: a document that person fills in async, built per the plugin's `references/questionnaire.template.md` (two levels above this skill) and written to `docs/01-spec/questionnaire-<recipient>.md`. Its questions stand in the spec as open questions until the answers come back and are folded in.
@@ -59,6 +61,7 @@ Write the document to `docs/01-spec/spec.md` using the structure in `references/
 - Every requirement is numbered (REQ-001…), verifiable, and carries a verification method.
 - Recommendations come with rationale and rejected alternatives.
 - Fill in Section 6 (Kinematic & Motion Envelope) with real numbers, not placeholders, once the architecture is chosen.
+- Fill in Section 8 (Software & Compute Architecture) to the same standard: every link carries a budget and a seam-level verification, every data artifact names its schema.
 - Open questions are a first-class section; an honest "TBD pending prototype" beats a confident guess.
 - Write like an engineer: short declarative sentences, numbers with units, always SI (imperial in parentheses only if the user's shop works in it).
 - Seed `docs/01-spec/budgets.md` and `docs/01-spec/traceability.md` from their templates in `references/`.
@@ -85,4 +88,4 @@ Update `CLAUDE.md` (Stage → `plan`, Latest artifacts) and log the architecture
 
 ## Scope boundaries
 
-This skill covers electromechanical system design. For deep dives on control theory or software architecture, do the systems-level treatment here (interfaces, requirements) and note where specialist work is needed. If the user wants a concept explained rather than designed, call the Skill tool with "armature-teach".
+This skill covers electromechanical system design. Software gets its systems-level treatment in §8 — units, links, budgets, artifacts — and stops there: control law design and source-tree organisation belong to specialist work and to the plan's software tasks. Note where that work is needed rather than doing it here. If the user wants a concept explained rather than designed, call the Skill tool with "armature-teach".
