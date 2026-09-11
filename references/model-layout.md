@@ -1,0 +1,85 @@
+# Model layout — how generated model code is laid out
+
+Every Python module **armature-derive** writes under `analysis/model/` and **armature-cad**
+writes under `cad/parts/` follows these rules. Skills point here; they don't restate them.
+Firmware, ROS nodes, and bench procedures (**armature-test**, **armature-bringup**) are the
+user's own code under the project's conventions, and sit outside them.
+
+Every agent that opens a module pays for the whole file: the session editing it, the
+red-team at a checkpoint, a later stage looking up one constant. The rules keep each read
+to what its question needs.
+
+## One section, one module, one checks module
+
+A module mirrors the document it accompanies — a milestone note, a `docs/testing/` report,
+a part definition — and its decomposition mirrors that document's sections. Outline the
+document before writing code: the split is then a consequence of the outline, known before
+any code exists, never a refactor forced at the checkpoint. A document with more than about
+three substantive sections gets a package from the start:
+
+```
+dynamics/
+  __init__.py            MILESTONE = (2, "Milestone 2: dynamics") — the identity, nothing else
+  lagrangian.py          note §1–2
+  lagrangian_checks.py
+  statics.py             note §3
+  statics_checks.py
+```
+
+The package's `__init__.py` owns the milestone identity: its `MILESTONE` tuple orders and
+titles the run, and every submodule inherits it, running in file-name order. Other modules
+import from the submodule that owns a name. A library package (a shared helper, not a
+milestone) makes its `__init__.py` the public surface instead: the contract docstring and
+the re-exported names callers import.
+
+That triple — a document section, its submodule, its checks — is the red-team's review
+unit: one coherent argument, held in view at a time.
+
+## Checks one file over
+
+A module's self-tests live in a sibling checks module named for it: `kinematics.py` →
+`kinematics_checks.py`. Locality is kept — the checks sit beside what they check — and
+neither file carries the other's lines. Discovery pairs the two by name, so moving a check
+costs no registration; pytest never collects a `*_checks.py` directly, so the one pytest
+bridge stays the only path and the two entry points cannot disagree. A checks module
+orphaned by a rename fails the layout check instead of silently never running.
+
+## Reports print
+
+Table formatting and long printed results live in a report module: `report_<scope>.py`
+(`report_results.py`, `report_t11.py` for a plan task), or `report.py` inside a package.
+Discovery never takes a report module for a milestone module, and a report module never
+checks anything, so a renderer never inflates the file a red-team reads to check equations.
+
+## The budget: 250 code lines
+
+A **code line** is any line not blank, not comment-only, and not part of a docstring.
+Documentation is free; the only way under the budget is to split. `layout.py` counts —
+`ast` for docstrings, `tokenize` for comments — and ships inside each template, stdlib only,
+because a copied project cannot import the plugin:
+
+- `python layout.py` (in the template's directory) prints every module's count, and the
+  milestone notes' line counts for information — notes carry no budget — then exits
+  nonzero on a violation. It imports nothing but the standard library, so it runs where
+  SymPy, SciPy, or build123d cannot.
+- In `analysis/model/`, `run_all.py` discovers `layout.py`'s checks like any other, so the
+  full run and `pytest` — the milestone checkpoint — fail on a module over budget. Running
+  one milestone (`run_all.py kinematics`) leaves them out: a file still being written is
+  not red-barred mid-work.
+
+A module that genuinely must stand large says why, at module level:
+
+```python
+LAYOUT_EXEMPT = "one generated lookup table; splitting it splits the table"
+```
+
+Anything but a non-empty string raises, so an exemption cannot be claimed without being
+argued. The reason is surfaced in `layout.py`'s table, and the red-team challenges every
+one: the fresh context judges the exception better than the session that just wrote the
+file.
+
+## Licence headers
+
+A generated module that carries a licence carries one line —
+`# SPDX-License-Identifier: <id>` — and the full text stays in the repository's licence
+file. A header copied into every file multiplies by every split.

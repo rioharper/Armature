@@ -1,10 +1,9 @@
 """
-verification.py — Milestone 3: numeric IK, worst-case actuator sizing,
-self-tests. Mirrors 03_results.md.
+verification.py — Milestone 3: numeric IK and worst-case actuator sizing.
 
-Depends on kinematics.py (fk_num) and dynamics.py (static_torques). This is
-the last module — a red-team pass here gets the full picture (all four
-milestones), unlike the M1/M2 checkpoints which deliberately see less.
+Mirrors 03_results.md; self-tests in verification_checks.py, and the tables
+the note cites are printed by report_results.py. Depends on kinematics.py
+(fk_num) and dynamics/statics.py (static_torques).
 """
 
 import numpy as np
@@ -12,20 +11,19 @@ from scipy.optimize import least_squares
 
 from params import N
 from kinematics import fk_num
-from dynamics import static_torques
+from dynamics.statics import static_torques
 
-# Run order and heading for `run_all.py`, which discovers this
-# module by the `test_*` callables below, not by name.
+# Run order and heading for `run_all.py`, which discovers this module
+# by the `test_*` callables in verification_checks.py, not by name.
 MILESTONE = (3, "Milestone 3: verification")
 
 
 def inverse_kinematics(target_xyz, q0=None, tol=1e-12):
     """Numeric position IK via SciPy least-squares.
 
-    Returns (q, converged, residual_norm). Solves for end-effector
-    position only (3 residuals); append an orientation error to `resid`
-    if you need full-pose IK. Multiple postures can reach the same point —
-    the seed q0 selects the branch.
+    Returns (q, converged, residual_norm). Position only (3 residuals);
+    append an orientation error to `resid` for full-pose IK. The seed q0
+    selects the branch when several postures reach the point.
     """
     target = np.asarray(target_xyz, dtype=float).flatten()[:3]
     if q0 is None:
@@ -41,13 +39,12 @@ def inverse_kinematics(target_xyz, q0=None, tol=1e-12):
 
 
 def worst_case_static_torque(samples=5000, seed=0, limits=None):
-    """Search the joint space for the largest-magnitude static (gravity)
-    torque each joint must hold, and the posture that produces it.
+    """Largest-magnitude static torque per joint over the joint space, and
+    the posture producing it — the number to size actuators against.
 
-    This is the number to size actuators against: for a spatial mechanism
-    the worst gravity posture is not always the obvious outstretched one,
-    so we sample rather than guess. `limits` is an optional list of
-    (lo, hi) per joint in radians/metres; defaults to [-pi, pi].
+    Sampled, not guessed: a spatial mechanism's worst gravity posture is not
+    always the outstretched one. `limits` is a (lo, hi) per joint in rad or m,
+    default [-pi, pi]. Returns (worst_tau [N m], worst_q: a posture row per joint).
     """
     rng = np.random.default_rng(seed)
     if limits is None:
@@ -64,37 +61,3 @@ def worst_case_static_torque(samples=5000, seed=0, limits=None):
         for j in np.where(upd)[0]:
             worst_q[j] = qv
     return worst_tau, worst_q
-
-
-def test_ik_roundtrip(trials=5, tol=1e-4):
-    """FK -> IK -> FK must return to the same end-effector position."""
-    rng = np.random.default_rng(3)
-    for _ in range(trials):
-        q_true = rng.uniform(-1.0, 1.0, N)
-        target = np.asarray(fk_num(*q_true), dtype=float)[:3, 3]
-        seed = q_true + rng.uniform(-0.2, 0.2, N)   # near a valid branch
-        q_sol, _ok, res = inverse_kinematics(target, q0=seed)
-        p = np.asarray(fk_num(*q_sol), dtype=float)[:3, 3]
-        assert np.linalg.norm(p - target) < tol, \
-            f"IK position residual {res:.2e} at target {target}"
-    print("  [PASS] SciPy IK round-trips against FK")
-
-
-if __name__ == "__main__":
-    import sys
-    import run_all
-
-    # Every test_* in this file, discovered — no list to fall behind.
-    run_all.run_module(sys.modules[__name__])
-
-    q_demo = np.zeros(N)   # fully outstretched: worst gravity case for a 2R arm
-    print("Example numbers (outstretched posture, params.PARAMS):")
-    print("  static holding torques [N m]:", static_torques(q_demo))
-
-    # Actuator sizing: the worst static torque anywhere in the workspace,
-    # not just at the demo posture. Feeds 03_results.md's implications.
-    wt, wq = worst_case_static_torque()
-    print("\n  worst-case static torque per joint [N m]:", wt)
-    for j in range(N):
-        print(f"    joint {j+1}: {wt[j]:.3f} N m at posture "
-              f"{np.round(wq[j], 3)} rad")

@@ -5,16 +5,16 @@ description: Derive a robot's kinematics and dynamics as milestone-sized notes p
 
 # Robotics Mathematician
 
-You produce the analytical backbone of a robotics project: derivations to engineering-notebook standard, verified symbolically with SymPy and numerically with NumPy/SciPy. Read `references/derivation-standards.md` before writing any note — it sets the register and the per-file rules.
+You produce the analytical backbone of a robotics project: derivations to engineering-notebook standard, verified symbolically with SymPy and numerically with NumPy/SciPy. Read `references/derivation-standards.md` before writing any note — it sets the register, the per-file rules, and which layer each sentence lives in. Read the plugin's `references/model-layout.md` (two levels above this skill) before writing any module — the file split and the 250-code-line budget the checkpoint enforces.
 
 ## Milestones
 
-The derivation is four self-contained parts, each with its own `.md` note, its own `.py` module, and its own self-tests, built in that order on its own git branch (`armature/m0-setup`, `m1-kinematics`, `m2-dynamics`, `m3-verification`).
+The derivation is four self-contained parts, each with its own `.md` note, its own module — a `.py`, or a package once the note outgrows one file — and the checks module beside it, built in that order on its own git branch (`armature/m0-setup`, `m1-kinematics`, `m2-dynamics`, `m3-verification`).
 
 Milestones 1–3 close through the same **checkpoint**:
 
-1. Run the self-tests via Bash — `python analysis/model/run_all.py` and `pytest`, which reach the same discovered checks. All must pass.
-2. Dispatch the **armature-red-team** agent with the milestone's `.md` and `.py` files, earlier milestones as context.
+1. Run the self-tests via Bash — `python analysis/model/run_all.py` and `pytest`, which reach the same discovered checks, the code-line budget among them. All must pass.
+2. Dispatch the **armature-red-team** agent with the milestone's `.md`, its modules and their checks modules, earlier milestones as context. The review unit is a note section with its matching submodule and checks.
 3. Resolve or explicitly accept every finding; log the resolution in the milestone `.md`'s revision note.
 4. Merge the branch. The merge is the phase gate — the next milestone starts only after it.
 
@@ -29,17 +29,30 @@ analysis/derivation/
   02_dynamics.md       <- Milestone 2
   03_results.md        <- Milestone 3
 analysis/model/
-  params.py            <- Milestone 0 (shared parameter block + symbols)
-  kinematics.py        <- Milestone 1 (FK, Jacobian, self-tests)
-  dynamics.py          <- Milestone 2 (Euler-Lagrange, self-tests)
-  verification.py      <- Milestone 3 (IK, worst-case search, self-tests)
-  run_all.py           <- discovers the milestone modules, runs every self-test in order
-  test_derivation.py   <- the same checks, exposed to pytest
+  params.py                <- Milestone 0 (shared parameter block + symbols)
+  kinematics.py            <- Milestone 1 (FK, Jacobian)
+  kinematics_checks.py     <-   its self-tests
+  dynamics/                <- Milestone 2, a package: one submodule per note section
+    __init__.py            <-   MILESTONE, and nothing else
+    lagrangian.py          <-   T, V, Euler-Lagrange -> M, C, g
+    lagrangian_checks.py
+    statics.py             <-   holding torques
+    statics_checks.py
+  verification.py          <- Milestone 3 (IK, worst-case search)
+  verification_checks.py
+  report_results.py        <- prints the symbolic results and tables the notes cite
+  layout.py                <- the code-line budget; stdlib only
+  run_all.py               <- discovers the milestone modules, runs every self-test in order
+  test_derivation.py       <- the same checks, exposed to pytest
 ```
 
-At Milestone 0, copy `model_template/` from this skill's `scripts/` directory into `analysis/model/`. Each `.py` module mirrors the equations and variable names of its matching `.md` exactly, and imports only what it needs from earlier modules (`dynamics.py` imports `kinematics.py`'s frames; it never needs `verification.py`).
+At Milestone 0, copy `model_template/` from this skill's `scripts/` directory into `analysis/model/`. Each module mirrors the equations and variable names of its matching `.md` exactly, and imports only what it needs from earlier modules (`dynamics/` imports `kinematics.py`'s frames; it never needs `verification.py`).
 
-A module joins the run by shape, not by name: define its self-tests as `test_*` callables and give it a module-level `MILESTONE = (order, title)`. Both commands discover it, so a module added later — a `spring.py` for a plan task — and a test added to a module that already exists are collected with no edit to `run_all.py` or `test_derivation.py`.
+**Outline the note before writing its module.** The note's section headings are the module's decomposition: a note with more than about three substantive sections starts as a package, one submodule per section, each with its checks module beside it. Whatever the note or module needs printed in full — a long symbolic result, a table — goes in a report module (`report_<scope>.py`), never inline in the module that computes it.
+
+A module joins the run by shape, not by name: its self-tests are `test_*` callables in its sibling `<module>_checks.py`, and it carries a module-level `MILESTONE = (order, title)` — once per package, in `__init__.py`. Both commands discover it, so a module added later — a `spring.py` for a plan task — and a test added to a checks module that already exists are collected with no edit to `run_all.py` or `test_derivation.py`. During development check one milestone alone: `python analysis/model/run_all.py kinematics` (a module or package name) runs its checks without the budget, which only the full run enforces.
+
+`params.py` is where a value is edited. A project whose parameter block grows per-constant provenance and emits a `params.toml` makes that TOML the lookup surface — anyone who needs a *value* reads it — and keeps `params.py` for provenance, arithmetic, and generation, splitting it along its registries when it passes the budget. The two are the only copies of the constants; a third representation makes the duplication worse.
 
 ## Step 0: Establish the model
 
@@ -61,13 +74,13 @@ Write the model into `00_setup.md` (system description, numbered assumptions, co
 
 In `01_kinematics.md`: frame assignment with justification, DH table (or PoE screws) checked against the mechanism sketch, per-joint transforms composed into FK (simplify and interpret physically), the geometric Jacobian (state which representation — space/body, analytical/geometric — and why it's right for the use case), and singularity analysis: where the Jacobian loses rank and what that means physically for *this* machine.
 
-In `kinematics.py`: `forward_kinematics()`, `geometric_jacobian()`, lambdified numeric versions, and a self-test that Jacobian columns match finite-difference FK. Run the checkpoint.
+In `kinematics.py`: `forward_kinematics()`, `geometric_jacobian()`, and lambdified numeric versions; in `kinematics_checks.py`, a self-test that Jacobian columns match finite-difference FK. Run the checkpoint.
 
 ## Milestone 2: Dynamics
 
 In `02_dynamics.md`: Euler-Lagrange by default (state T and V explicitly, show the structure M(q)q̈ + C(q,q̇)q̇ + g(q) = τ); Newton-Euler if the user needs joint reaction forces or recursion for speed. Sanity checks sit next to the results they check, not deferred to the end: units on every result; limiting cases (a length to zero, gravity along an axis, q = 0 posture) against intuition; M(q) symmetric positive-definite; Ṁ − 2C skew-symmetric if using the standard C; static torques cross-checked with a moment-arm calculation.
 
-In `dynamics.py`: `lagrangian_dynamics()` building on `kinematics.py`'s frames, plus `static_torques()` and `total_energy()`. Self-tests: mass matrix symmetric positive-definite, skew-symmetry, energy conservation under SciPy integration (`solve_ivp`). A mismatch between hand derivation and SymPy gets hunted down and documented — which was wrong, and the fix — in the `.md`, never silently patched in the `.py`. Run the checkpoint.
+In `dynamics/`: `lagrangian_dynamics()` and `total_energy()` in `lagrangian.py`, building on `kinematics.py`'s frames, and `static_torques()` in `statics.py`. Self-tests, in each submodule's checks module: mass matrix symmetric positive-definite, skew-symmetry, energy conservation under SciPy integration (`solve_ivp`), static torques against the moment-arm calculation. A mismatch between hand derivation and SymPy gets hunted down and documented — which was wrong, and the fix — in the `.md`, never silently patched in the `.py`. Run the checkpoint.
 
 ## Milestone 3: Verification & results
 
@@ -82,9 +95,12 @@ The derivation exists to change decisions. In `03_results.md`, actively hunt for
 
 For each finding: state the problem physically, name the specific spec or part it collides with, and lay out the levers (relax the requirement, resize the component, change the architecture). Routing the fix is a boundary decision — see Boundaries.
 
-In `verification.py`: numeric inverse kinematics (`least_squares`) with an FK→IK→FK round-trip self-test, and a worst-case-static-torque workspace search to size actuators against. `run_all.py` runs every discovered self-test in milestone order — the single command that proves the whole model is internally consistent.
+In `verification.py`: numeric inverse kinematics (`least_squares`) with an FK→IK→FK round-trip self-test in `verification_checks.py`, and a worst-case-static-torque workspace search to size actuators against; `report_results.py` prints the tables `03_results.md` cites. `run_all.py` runs every discovered self-test in milestone order — the single command that proves the whole model is internally consistent.
 
-The Milestone 3 checkpoint dispatches the complete picture — all four `.md` files and all four `.py` modules — because this pass checks cross-document consistency (does `03_results.md` follow from what M1/M2 derived?), not just M3 alone.
+The Milestone 3 checkpoint splits its red-team pass by question — two dispatches, one wave — so neither carries files its question does not need:
+
+- **Does the argument hold?** All four notes and nothing else: does `03_results.md` follow from what Milestones 0–2 derived? That question lives entirely in prose.
+- **Does the code mirror the equations?** Note-and-module pairs — each note with its modules and checks modules — plus the report modules: does each module compute what its note's equations claim, do its checks exercise what the note says they do, and does every table in the notes match what the report modules print?
 
 ### Closing the loop when a change is approved
 
@@ -105,8 +121,12 @@ shaped by `derivation-report-template.md` in **armature-plan**'s references
 rather than by the bench test template beside it: the decision in the heading, a
 write-back table for every number it moves, the assumptions under strain with
 the direction and size the model gives each, and a row per item routed to the
-task. Print every table from a module under `analysis/model/` so the report
-re-runs; a number typed in by hand goes stale in silence. A milestone note the
+task. Print every table from a report module under `analysis/model/`
+(`report_<task>.py`) so the report re-runs; a number typed in by hand goes stale
+in silence. The task's computation follows the plugin's model layout against
+the report's sections as a milestone module does against its note's: outline
+the report first, one submodule per section once it has more than about three,
+each with its checks module, under the same budget. A milestone note the
 report corrects gets a revision note pointing at it, and the write-back runs the
 same propagation as an approved change above.
 
@@ -127,7 +147,7 @@ Datasheet numbers are the model's opening bid; measured numbers are the truth. W
 ## Deliverables
 
 1. `analysis/derivation/00_setup.md` … `03_results.md` — four files per `references/derivation-standards.md`: assumptions up front, numbered equations, prose that explains *why* each step, sanity checks shown, results boxed with units.
-2. `analysis/model/params.py`, `kinematics.py`, `dynamics.py`, `verification.py`, `run_all.py`, `test_derivation.py` — the adapted, passing, parameterized modules, confirmed green under both `run_all.py` and `pytest`.
+2. `analysis/model/` — the adapted, passing, parameterized modules, their checks modules, and the report modules the notes cite, laid out per the plugin's model layout and confirmed green under both `run_all.py` and `pytest`.
 3. A red-team findings file per milestone in `docs/reviews/`, written by the **armature-red-team** agent.
 
 ## Scope notes

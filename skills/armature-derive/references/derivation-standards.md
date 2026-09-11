@@ -1,13 +1,14 @@
 # Derivation Notes — Standards
 
-The target register: a sharp senior engineer's design notebook — the notes they'd actually leave for later-you to pick the project back up from. Not a journal paper. No result gets skipped, but nothing gets padded to look thorough either. If a sentence doesn't carry information later-you would need, cut it.
+The target register: a sharp senior engineer's design notebook — the findings they'd actually leave for later-you to pick the project back up from, the story of what they expected, what they tried, and what the numbers said, told alongside the hard math. Not a journal paper. No result gets skipped, but nothing gets padded to look thorough either. If a sentence doesn't carry information later-you would need, cut it.
 
 ## File layout
 
 Each project's derivation is four files, not one — the layout and per-milestone content live in SKILL.md. Every file:
 
-- opens with a one-line header: project name, milestone, rev/date, and which `.py` module accompanies it
+- opens with a one-line header: project name, milestone, rev/date, and which module or package accompanies it
 - ends with a short revision note: what changed since the last rev and why — this is what makes re-derivations traceable
+- stays one continuous argument. The module splits along the note's sections; the note itself never splits, and carries no size gate — `layout.py` reports its length for information only
 
 ## Writing rules
 
@@ -20,11 +21,22 @@ Each project's derivation is four files, not one — the layout and per-mileston
 7. **Honest uncertainty, briefly flagged.** An assumption that materially affects results (ignoring friction in a high-reduction gearbox) gets one flag with the expected direction and rough size of the error — in `03_results.md`, not scattered as hedges throughout.
 8. **Sanity checks are shown, not claimed.** "Setting l₂ → 0 reduces (12) to the single-pendulum result (13)" — with (13) actually shown. One line is enough: "verified" without the verification fails one way, three sentences of narration around a one-line check fails the other.
 9. **No filler, no restating.** Ban: "It is important to note", "In the world of robotics", "delve", "plays a crucial role", restating the section header as the first sentence, and summary paragraphs that repeat what the section just said. If cutting a sentence loses no information, cut it.
-10. **LaTeX in markdown** ($...$, $$...$$). If a symbolic result is a half-page monster, present its structure ("M₁₂ has the form a + b cos q₂ where a = …") and let the `.py`'s printed output be the full expression — don't paste the monster into the notes.
+10. **LaTeX in markdown** ($...$, $$...$$). **A long symbolic result is printed, never pasted.** Present its structure ("M₁₂ has the form a + b cos q₂ where a = …") and cite the report module that prints the full expression. A result longer than a line of the note is the report module's to carry.
+11. **Say what you expected before you computed it.** Every significant result carries the prediction made before the numbers ran — a hand estimate, a limiting case, a hunch with its reason — and whether the result confirmed or surprised it. A confirmed result and a surprising one read differently, and later-you needs to know which this was.
+12. **An abandoned approach gets one sentence on why it died.** "Newton-Euler first; dropped because the reaction forces weren't needed and the recursion hid the structure of M." Later-you doesn't re-walk a path already ruled out.
+
+## Which layer a sentence lives in
+
+A note and its module each carry what the other cannot, and a sentence said in both is paid for on every read of the module. Narrative, derivation, physical argument, and revision history — the story of a correction included — live in the note. The module carries the computation and the least prose a caller needs:
+
+- **Function docstring**: one sentence of what the function computes; the note's equation or section it implements; and anything a *caller* needs that the note does not say — units, sign conventions, failure modes, why a default is what it is.
+- **Module docstring**: orientation in about ten lines — the note and sections it mirrors, where its checks live, what it imports — pointing at the note for the argument.
+
+A derivation, a justification of the physics, or the history of a fix belongs in the note, with the docstring citing it. The test for any sentence in a docstring: would it be wrong to say this in the note? If not, it belongs in the note.
 
 ## Length is a signal, not a target
 
-A milestone file that's short because the mechanism is simple is correct. A milestone file that's long because every step is doing real work is also correct. A milestone file that's long because of hedging, restated interpretation, or an equation shown three ways when one would do is the failure mode to catch on re-read — trim it before moving to the next milestone, not at the end when trimming means re-touching four files instead of one.
+This governs the notes; the modules are held to a hard budget instead (the plugin's `references/model-layout.md`). A milestone file that's short because the mechanism is simple is correct. A milestone file that's long because every step is doing real work is also correct. A milestone file that's long because of hedging, restated interpretation, or an equation shown three ways when one would do is the failure mode to catch on re-read — trim it before moving to the next milestone, not at the end when trimming means re-touching four files instead of one.
 
 ## References
 

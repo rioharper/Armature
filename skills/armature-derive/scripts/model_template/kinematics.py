@@ -1,24 +1,21 @@
 """
-kinematics.py — Milestone 1: forward kinematics + Jacobian + self-tests.
+kinematics.py — Milestone 1: forward kinematics and the geometric Jacobian.
 
-Mirrors 01_kinematics.md. Run standalone (`python kinematics.py`) to check
-just this milestone without touching dynamics or verification — that's the
-whole point of the split: a red-team pass on Milestone 1 only needs this
-file plus params.py, not the full model.
+Mirrors 01_kinematics.md; its self-tests are in kinematics_checks.py. Imports
+only params.py, so a red-team pass on Milestone 1 reads this file, its checks,
+and the parameter block. Check it alone: `python run_all.py kinematics`.
 
-Uses modified DH (Craig convention). Adapt the joint table in params.py or
-the transform below if your derivation writeup uses a different convention
-— but keep the structure: symbolic build -> numeric functions -> self-test.
+Modified DH (Craig). Keep the structure if the note uses another convention:
+symbolic build -> numeric functions.
 """
 
-import numpy as np
 import sympy as sp
 from sympy import cos, sin, Matrix
 
-from params import DH, T_TOOL, N, q, QS, SUB_Q, SUB_P
+from params import DH, T_TOOL, q, QS, SUB_Q, SUB_P
 
-# Run order and heading for `run_all.py`, which discovers this
-# module by the `test_*` callables below, not by name.
+# Run order and heading for `run_all.py`, which discovers this module
+# by the `test_*` callables in kinematics_checks.py, not by name.
 MILESTONE = (1, "Milestone 1: kinematics")
 
 
@@ -72,28 +69,3 @@ print("  FK and Jacobian built.")
 # --- numeric functions, lambdified, parameterized by params.PARAMS ---
 fk_num = sp.lambdify(QS, T_EE.subs(SUB_Q).subs(SUB_P), "numpy")
 J_num = sp.lambdify(QS, J.subs(SUB_Q).subs(SUB_P), "numpy")
-
-
-def test_jacobian_vs_finite_difference(trials=5, h=1e-7, tol=1e-5):
-    rng = np.random.default_rng(0)
-    for _ in range(trials):
-        qv = rng.uniform(-np.pi, np.pi, N)
-        Jn = np.asarray(J_num(*qv), dtype=float)[:3, :]   # linear part
-        for i in range(N):
-            dq = np.zeros(N); dq[i] = h
-            p1 = np.asarray(fk_num(*(qv + dq)), dtype=float)[:3, 3]
-            p0 = np.asarray(fk_num(*(qv - dq)), dtype=float)[:3, 3]
-            fd = (p1 - p0) / (2 * h)
-            assert np.allclose(Jn[:, i], fd, atol=tol), \
-                f"Jacobian col {i} mismatch at q={qv}"
-    print("  [PASS] Jacobian matches finite-difference FK")
-
-
-if __name__ == "__main__":
-    import sys
-    import run_all
-
-    # Every test_* in this file, discovered — no list to fall behind.
-    run_all.run_module(sys.modules[__name__])
-    print("  T_0_ee =", T_EE)
-    print("  J =", J)

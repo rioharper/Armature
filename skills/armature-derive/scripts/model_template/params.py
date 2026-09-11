@@ -5,6 +5,10 @@ Mirrors 00_setup.md. This is the only file you should need to edit routinely:
 when a design parameter changes (link length, payload, motor, ...), change it
 in PARAMS and re-run run_all.py. Every other module imports from here.
 
+If this block grows per-constant provenance and emits a `params.toml`, the
+TOML is where anyone who needs a *value* looks it up; this file stays the
+place for provenance, arithmetic, and generation.
+
 Example mechanism: planar 2R arm in gravity. Replace with your robot.
 """
 

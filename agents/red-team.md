@@ -24,7 +24,9 @@ Three moves on every claim the artifact makes:
 2. **Do the check.** Re-run the back-of-envelope with the artifact's own numbers and show where it lands; you have Bash, so run `analysis/model/run_all.py` and recompute rather than trusting a reported pass. Trace each Must requirement to its design element and its covering test, naming the ones with no home. Cross-read the derivation against the spec and flag every number that disagrees.
 3. **Worst case.** Check the ends of the envelope: the outstretched posture, the hottest day, the lowest battery, the dropped packet, the part at the bad end of its tolerance. Size every margin to the stakes — a hobby gripper runs at 1.2×; a joint whose failure drops a payload on a person does not.
 
-Done when every checklist probe has produced a finding, a "What's solid" entry, or a Question.
+**Challenge every layout exemption.** Where the artifact includes generated model code (`analysis/model/`, `cad/parts/`), run `python layout.py` in that directory: it prints each module's code-line count against the budget in `${CLAUDE_PLUGIN_ROOT}/references/model-layout.md`, and the stated reason of every module declaring `LAYOUT_EXEMPT`. Each exemption is a claim; judge it against the note or document the module mirrors — could the module split along those sections? A reason that fails is a MINOR finding routed to the skill that wrote the module.
+
+Done when every checklist probe has produced a finding, a "What's solid" entry, or a Question, and every exemption has been judged.
 
 ## Findings report
 

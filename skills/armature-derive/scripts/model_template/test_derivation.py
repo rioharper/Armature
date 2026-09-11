@@ -1,10 +1,11 @@
 """
 The derivation's self-tests, exposed to pytest.
 
-The checks themselves live beside the equations they check, in each
-milestone's module, because that is what a red-team pass on one milestone
-needs to read. This file only makes pytest run them, since pytest collects
-`test_*.py` and not `kinematics.py`.
+The checks themselves live one file over from the equations they check, in
+each module's sibling checks module (`kinematics_checks.py`), so a red-team
+pass on one milestone reads two small files rather than one large one. This
+file only makes pytest run them: pytest collects `test_*.py`, and neither
+`kinematics.py` nor `kinematics_checks.py` matches.
 
 *Which* checks those are is `run_all.py`'s discovery, imported rather than
 repeated. So `pytest` and `python run_all.py` cannot disagree about what the
