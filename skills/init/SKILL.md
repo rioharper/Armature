@@ -34,7 +34,8 @@ this skill.
 
 Ask through the AskUserQuestion tool:
 
-1. Project name and a one-line description.
+1. Project name, a one-line description, and the goal behind the project —
+   why its builder wants it, which the description does not carry.
 2. CAD package: SOLIDWORKS / Fusion 360 / Onshape / undecided.
 3. On SOLIDWORKS only: connect the SolidWorks MCP server to this project? It
    lets armature-cad's Done-when checks measure the live model instead of
@@ -47,7 +48,9 @@ Ask through the AskUserQuestion tool:
    `.mcp.json` in step 4, and Claude Code asks you to approve it on the next
    start. Every other answer leaves the project with no MCP server, which is
    why a Fusion, Onshape, or undecided project never sees one fail.
-4. Builder profile: solo or team; fabrication access (printer, machining, hand tools); experience level.
+4. Builder profile: solo or team; fabrication access (printer, machining, hand
+   tools); experience level; related work — the other repos or projects of
+   theirs this one touches, or none.
 
 Done when every placeholder in the template below has a value.
 
@@ -122,6 +125,12 @@ Done when `git ls-files` lists every scaffolded directory.
      → build (armature-bringup, armature-test) -->
 **Latest artifacts:** none yet
 
+## Purpose
+
+<why this project exists for its builder — the goal behind it, which the
+one-line description above does not carry. One to three lines. A recurring
+instruction it implies belongs in Standing rules, not here.>
+
 ## Glossary
 
 The project glossary is `CONTEXT.md` at the repo root — frames, symbol
@@ -167,6 +176,8 @@ it appears.
 - Fabrication: <answer>
 - Team: <answer>
 - Experience: <answer>
+- Related work: <repos or projects this one touches, and how each relates —
+  or none>
 ```
 
 ## 6. Hand off

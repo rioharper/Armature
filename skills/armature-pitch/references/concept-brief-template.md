@@ -32,8 +32,9 @@ Outcome-level only: what must be true when it works, not how it works.
 
 ## 5. Envelope (rough)
 Budget order of magnitude, timeline order of magnitude, who's building it
-(solo hobbyist, student team, company). A sanity check on ambition, not a
-detailed constraint.
+(solo hobbyist, student team, company), and related work — the builder's
+other projects this one touches, each with its relationship. A sanity check
+on ambition, not a detailed constraint.
 
 ## 6. The Pitch
 One paragraph, written to sell the idea to someone who hasn't heard it —
